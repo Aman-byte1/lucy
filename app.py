@@ -251,6 +251,15 @@ def auth_page(): return render_template("auth.html")
 @login_required
 def dashboard(): return render_template("dashboard.html")
 
+@app.route("/about")
+def about_page(): return render_template("about.html")
+
+@app.route("/pricing")
+def pricing_page(): return render_template("pricing.html")
+
+@app.route("/contact")
+def contact_page(): return render_template("contact.html")
+
 @app.route("/")
 def index(): return render_template("index.html")
 
