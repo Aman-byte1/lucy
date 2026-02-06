@@ -35,9 +35,10 @@ DEFAULT_CONFIG = {
     "knowledge_base": "Lucy AI is a startup providing multilingual support. We specialize in low-resource African languages like Amharic, Oromo, Tigrinya, and Somali.",
     "welcome_message": "Hello! How can I help you today?",
     "temperature": 0.7,
+    "model": "gemini-1.5-flash",
     "client_api_key": "lucy-dev-12345",
     "bot_name": "Lucy AI",
-    "theme_color": "#0d6efd"
+    "theme_color": "#4F46E5"
 }
 
 try:
@@ -123,16 +124,18 @@ def require_client_key(f):
         return f(*args, **kwargs)
     return wrapped
 
+def log_usage(key, endpoint, payload=None):
+    USAGE_LOGS.append({"key": key, "endpoint": endpoint, "timestamp": time.time(), "payload": payload})
+
 def build_prompt(user_query, language, context, sector):
     config = load_config()
     full_context = config.get('knowledge_base', '')
     history = context or ''
     system = config.get('system_prompt', DEFAULT_CONFIG['system_prompt'])
     
-    # Refined prompt for pure knowledge-based support
     parts = [
         f"INSTRUCTIONS: {system}",
-        "CORE RULES: Respond in the same language as the user query. Stick strictly to the KNOWLEDGE BASE provided below. If the answer is not in the knowledge base, politely say you don't have that information.",
+        "CORE RULES: Respond in the same language as the user query. Stick strictly to the KNOWLEDGE BASE. If the answer is not in the knowledge base, politely say you don't have that information.",
         f"KNOWLEDGE BASE:\n{full_context}",
         f"CONVERSATION HISTORY:\n{history}",
         f"USER QUERY: {user_query}",
@@ -142,8 +145,16 @@ def build_prompt(user_query, language, context, sector):
 
 def call_gemini(prompt, language):
     if not GEMINI_AVAILABLE: return {"reply": "Gemini not configured.", "usage": {"tokens": 0}}
+    
+    config = load_config()
+    model_name = config.get("model", "gemini-1.5-flash")
+    temperature = float(config.get("temperature", 0.7))
+
     try:
-        model = genai.GenerativeModel("gemini-flash-latest")
+        model = genai.GenerativeModel(
+            model_name,
+            generation_config=genai.types.GenerationConfig(temperature=temperature)
+        )
         response = model.generate_content(prompt)
         text = response.text
         usage = {"total_tokens": response.usage_metadata.total_token_count} if response.usage_metadata else {}
@@ -200,6 +211,11 @@ def settings():
         return jsonify({"status": "updated"})
     return jsonify(load_config())
 
+@app.route("/api/activity", methods=["GET"])
+@login_required
+def get_activity():
+    return jsonify(USAGE_LOGS[-20:][::-1])
+
 @app.route("/api/upload", methods=["POST"])
 @login_required
 def upload_file():
@@ -214,10 +230,19 @@ def upload_file():
 @require_client_key
 def support():
     data = request.get_json() or {}
-    user_query, lang, context, sector = data.get("user_query"), data.get("language", "en"), data.get("context"), data.get("sector", "general")
+    user_query = data.get("user_query")
+    language = data.get("language", "auto")
+    context = data.get("context")
+    sector = data.get("sector", "general")
+    key = request.headers.get("X-API-KEY")
+
     if not user_query: return jsonify({"error": "query required"}), 400
-    prompt = build_prompt(user_query, lang, context, sector)
-    result = call_gemini(prompt, lang)
+    
+    prompt = build_prompt(user_query, language, context, sector)
+    result = call_gemini(prompt, language)
+    
+    log_usage(key, "/api/support", {"query": user_query, "reply": result.get("reply"), "usage": result.get("usage")})
+    
     return jsonify(result)
 
 @app.route("/auth")
