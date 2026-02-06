@@ -10,31 +10,27 @@ import pypdf
 
 load_dotenv()
 
-GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+# Prioritize environment variable, then dotenv
+GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY") or os.getenv("GOOGLE_API_KEY")
 CLIENT_API_KEY = os.getenv("CLIENT_API_KEY", "dev-client-key")
 ADMIN_KEY = os.getenv("ADMIN_KEY", "admin-secret")
 BOT_CONFIG_FILE = "bot_config.json"
 USERS_FILE = "users.json"
-UPLOAD_FOLDER = "uploads"
+UPLOAD_FOLDER = "/tmp/uploads" if os.environ.get("VERCEL") else "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-
-# Default Configuration
-DEFAULT_CONFIG = {
-    "system_prompt": "You are a helpful, culturally-aware customer support assistant. Respond ONLY in the target language specified. Be empathetic and use local idioms where appropriate. Avoid hallucinations.",
-    "knowledge_base": "Lucy AI is a startup providing multilingual support. We specialize in low-resource African languages like Amharic, Oromo, Tigrinya, and Somali.",
-    "welcome_message": "Hello! How can I help you today?",
-    "temperature": 0.7,
-    "client_api_key": "lucy-dev-12345",
-    "bot_name": "Lucy AI",
-    "theme_color": "#0d6efd"
-}
 
 try:
     import google.generativeai as genai
-    genai.configure(api_key=GOOGLE_API_KEY)
-    GEMINI_AVAILABLE = True
-except Exception:
+    if GOOGLE_API_KEY:
+        genai.configure(api_key=GOOGLE_API_KEY)
+        GEMINI_AVAILABLE = True
+        print("Lucy AI: Gemini successfully configured.")
+    else:
+        GEMINI_AVAILABLE = False
+        print("Lucy AI: WARNING - GOOGLE_API_KEY not found in environment.")
+except Exception as e:
     GEMINI_AVAILABLE = False
+    print(f"Lucy AI: Gemini config error: {e}")
 
 app = Flask(__name__, template_folder="templates", static_folder="static")
 app.secret_key = os.getenv("FLASK_SECRET_KEY", "lucy-secret-777")
