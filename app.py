@@ -11,8 +11,7 @@ import pypdf
 
 load_dotenv()
 
-# Prioritize environment variable, then dotenv
-GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY") or os.getenv("GOOGLE_API_KEY")
+GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
 CLIENT_API_KEY = os.getenv("CLIENT_API_KEY", "dev-client-key")
 ADMIN_KEY = os.getenv("ADMIN_KEY", "admin-secret")
 
@@ -22,6 +21,8 @@ if IS_VERCEL:
     BOT_CONFIG_FILE = "/tmp/bot_config.json"
     USERS_FILE = "/tmp/users.json"
     UPLOAD_FOLDER = "/tmp/uploads"
+    if not os.path.exists("/tmp"):
+        os.makedirs("/tmp", exist_ok=True)
 else:
     BOT_CONFIG_FILE = "bot_config.json"
     USERS_FILE = "users.json"
@@ -29,7 +30,6 @@ else:
 
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# Default Configuration
 DEFAULT_CONFIG = {
     "system_prompt": "You are a helpful, culturally-aware customer support assistant. Respond ONLY in the target language specified. Be empathetic and use local idioms where appropriate. Avoid hallucinations.",
     "knowledge_base": "Lucy AI is a startup providing multilingual support. We specialize in low-resource African languages like Amharic, Oromo, Tigrinya, and Somali.",
@@ -45,13 +45,12 @@ try:
     if GOOGLE_API_KEY:
         genai.configure(api_key=GOOGLE_API_KEY)
         GEMINI_AVAILABLE = True
-        print("Lucy AI: Gemini successfully configured.")
     else:
         GEMINI_AVAILABLE = False
-        print("Lucy AI: WARNING - GOOGLE_API_KEY not found in environment.")
+        print("Lucy AI: GOOGLE_API_KEY missing")
 except Exception as e:
     GEMINI_AVAILABLE = False
-    print(f"Lucy AI: Gemini config error: {e}")
+    print(f"Lucy AI: Gemini Error: {e}")
 
 app = Flask(__name__, template_folder="templates", static_folder="static")
 app.secret_key = os.getenv("FLASK_SECRET_KEY", "lucy-secret-777")
@@ -59,8 +58,6 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 CORS(app)
 
 USAGE_LOGS = []
-RATE_LIMIT_WINDOW = 3600
-RATE_LIMIT_MAX = 100
 RATE_TRACKER = {}
 
 SUPPORTED_LANGUAGES = [
@@ -68,10 +65,8 @@ SUPPORTED_LANGUAGES = [
     {"code": "ti", "name": "Tigrinya"}, {"code": "so", "name": "Somali"}, {"code": "en", "name": "English"},
 ]
 
-# --- Helpers ---
 def load_users():
-    if not os.path.exists(USERS_FILE):
-        return {}
+    if not os.path.exists(USERS_FILE): return {}
     try:
         with open(USERS_FILE, 'r') as f: return json.load(f)
     except: return {}
@@ -79,16 +74,14 @@ def load_users():
 def save_users(users):
     try:
         with open(USERS_FILE, 'w') as f: json.dump(users, f)
-    except Exception as e:
-        print(f"Error saving users: {e}")
+    except: pass
 
 def load_config():
     if not os.path.exists(BOT_CONFIG_FILE):
-        # On Vercel, try to load from local source if available
         if os.path.exists("bot_config.json"):
             try:
                 with open("bot_config.json", 'r') as src: data = json.load(src)
-                save_config(data) # try to persist to /tmp
+                save_config(data)
                 return data
             except: pass
         return DEFAULT_CONFIG.copy()
@@ -99,8 +92,7 @@ def load_config():
 def save_config(config):
     try:
         with open(BOT_CONFIG_FILE, 'w', encoding='utf-8') as f: json.dump(config, f, indent=2)
-    except Exception as e:
-        print(f"Error saving config: {e}")
+    except: pass
 
 def extract_text_from_file(filepath):
     ext = os.path.splitext(filepath)[1].lower()
@@ -111,7 +103,7 @@ def extract_text_from_file(filepath):
             for page in reader.pages: text += page.extract_text() + "\n"
         elif ext in ['.txt', '.md', '.csv']:
             with open(filepath, 'r', encoding='utf-8', errors='ignore') as f: text = f.read()
-    except Exception as e: return f"[Error: {str(e)}]"
+    except Exception as e: return f"Error: {str(e)}"
     return text.strip()
 
 def login_required(f):
@@ -128,11 +120,6 @@ def require_client_key(f):
         config = load_config()
         if key == "dashboard-demo-key": return f(*args, **kwargs)
         if not key or key != config.get("client_api_key", CLIENT_API_KEY): return jsonify({"error": "Unauthorized"}), 401
-        now = time.time()
-        stamps = RATE_TRACKER.setdefault(key, [])
-        stamps[:] = [t for t in stamps if now - t < RATE_LIMIT_WINDOW]
-        if len(stamps) >= RATE_LIMIT_MAX: return jsonify({"error": "Rate limit exceeded"}), 429
-        stamps.append(now)
         return f(*args, **kwargs)
     return wrapped
 
@@ -140,7 +127,7 @@ def build_prompt(user_query, language, context, sector):
     config = load_config()
     full_context = f"{config.get('knowledge_base', '')}\n\n{context or ''}"
     system = config.get('system_prompt', DEFAULT_CONFIG['system_prompt'])
-    parts = [f"SYSTEM INSTRUCTIONS: {system}", f"SECTOR: {sector}", f"KNOWLEDGE BASE / CONTEXT: {full_context}", f"TARGET LANGUAGE: {language}", f"USER QUERY: {user_query}"]
+    parts = [f"SYSTEM: {system}", f"SECTOR: {sector}", f"CONTEXT: {full_context}", f"LANG: {language}", f"USER: {user_query}"]
     return "\n\n".join(parts)
 
 def call_gemini(prompt, language):
@@ -151,21 +138,19 @@ def call_gemini(prompt, language):
         text = response.text
         usage = {"total_tokens": response.usage_metadata.total_token_count} if response.usage_metadata else {}
         return {"reply": text, "usage": usage}
-    except Exception as e: return {"reply": f"Error: {str(e)}", "usage": {"tokens": 0}}
-
-# --- Routes ---
+    except Exception as e: return {"reply": f"Gemini Error: {str(e)}", "usage": {"tokens": 0}}
 
 @app.route("/favicon.ico")
 def favicon():
-    return send_from_directory(os.path.join(app.root_path, 'static'), 'favicon.ico', mimetype='image/vnd.microsoft.icon')
+    return "", 204
 
 @app.route("/api/signup", methods=["POST"])
 def signup():
     data = request.json
     email, password = data.get("email"), data.get("password")
-    if not email or not password: return jsonify({"error": "Missing fields"}), 400
+    if not email or not password: return jsonify({"error": "Missing"}), 400
     users = load_users()
-    if email in users: return jsonify({"error": "User exists"}), 400
+    if email in users: return jsonify({"error": "Exists"}), 400
     users[email] = {"password": generate_password_hash(password)}
     save_users(users)
     session['user'] = email
@@ -180,7 +165,7 @@ def login():
     if user and check_password_hash(user['password'], password):
         session['user'] = email
         return jsonify({"status": "success"})
-    return jsonify({"error": "Invalid credentials"}), 401
+    return jsonify({"error": "Invalid"}), 401
 
 @app.route("/logout")
 def logout():
@@ -220,16 +205,13 @@ def upload_file():
 def support():
     data = request.get_json() or {}
     user_query, lang, context, sector = data.get("user_query"), data.get("language", "en"), data.get("context"), data.get("sector", "general")
-    if not user_query: return jsonify({"error": "user_query is required"}), 400
+    if not user_query: return jsonify({"error": "query required"}), 400
     prompt = build_prompt(user_query, lang, context, sector)
     result = call_gemini(prompt, lang)
     return jsonify(result)
 
 @app.route("/auth")
 def auth_page(): return render_template("auth.html")
-
-@app.route("/admin")
-def admin_page(): return render_template("admin.html")
 
 @app.route("/dashboard")
 @login_required
@@ -240,9 +222,9 @@ def index(): return render_template("index.html")
 
 @app.errorhandler(Exception)
 def handle_exception(e):
-    print(f"Lucy AI ERROR: {str(e)}")
+    print(f"ERROR: {str(e)}")
     print(traceback.format_exc())
-    return jsonify({"error": str(e), "type": str(type(e).__name__)}), 500
+    return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.getenv("PORT", 5000)), debug=True)
