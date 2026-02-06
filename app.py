@@ -192,5 +192,14 @@ def dashboard(): return render_template("dashboard.html")
 @app.route("/")
 def index(): return render_template("index.html")
 
+@app.errorhandler(Exception)
+def handle_exception(e):
+    # Log the error to Vercel console
+    print(f"Lucy AI ERROR: {str(e)}")
+    import traceback
+    print(traceback.format_exc())
+    # Return JSON error
+    return jsonify({"error": str(e), "type": str(type(e).__name__)}), 500
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.getenv("PORT", 5000)), debug=True)
