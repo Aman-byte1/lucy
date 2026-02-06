@@ -125,9 +125,19 @@ def require_client_key(f):
 
 def build_prompt(user_query, language, context, sector):
     config = load_config()
-    full_context = f"{config.get('knowledge_base', '')}\n\n{context or ''}"
+    full_context = config.get('knowledge_base', '')
+    history = context or ''
     system = config.get('system_prompt', DEFAULT_CONFIG['system_prompt'])
-    parts = [f"SYSTEM: {system}", f"SECTOR: {sector}", f"CONTEXT: {full_context}", f"LANG: {language}", f"USER: {user_query}"]
+    
+    # Refined prompt for pure knowledge-based support
+    parts = [
+        f"INSTRUCTIONS: {system}",
+        "CORE RULES: Respond in the same language as the user query. Stick strictly to the KNOWLEDGE BASE provided below. If the answer is not in the knowledge base, politely say you don't have that information.",
+        f"KNOWLEDGE BASE:\n{full_context}",
+        f"CONVERSATION HISTORY:\n{history}",
+        f"USER QUERY: {user_query}",
+        "ASSISTANT RESPONSE:"
+    ]
     return "\n\n".join(parts)
 
 def call_gemini(prompt, language):

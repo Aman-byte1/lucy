@@ -1,16 +1,12 @@
 (function() {
   const CLIENT_KEY = window.__LUCY_CLIENT_KEY__ || "dev-client-key";
-  
-  // Dynamically determine the API URL based on where this script was loaded from
-  const scriptSource = document.currentScript ? document.currentScript.src : "http://localhost:5000";
-  const BASE_URL = new URL(scriptSource).origin;
-  
+  const BASE_URL = window.location.origin;
   const API_URL = `${BASE_URL}/api/support`;
   const CONFIG_URL = `${BASE_URL}/api/widget-config?key=${CLIENT_KEY}`;
 
   let config = {
     bot_name: "Lucy AI",
-    theme_color: "#0d6efd",
+    theme_color: "#4F46E5",
     welcome_message: "Hello! How can I help you today?"
   };
 
@@ -25,15 +21,11 @@
   }
 
   function renderWidget() {
-    // 1. Inject Styles
     const style = document.createElement('style');
     style.innerHTML = `
       #lucy-widget-container {
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        z-index: 9999;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        position: fixed; bottom: 20px; right: 20px;
+        z-index: 9999; font-family: 'Inter', -apple-system, sans-serif;
       }
       #lucy-chat-bubble {
         width: 60px; height: 60px;
@@ -42,69 +34,56 @@
         display: flex; align-items: center; justify-content: center;
         cursor: pointer;
         box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-        transition: transform 0.3s ease;
+        transition: all 0.3s ease;
       }
-      #lucy-chat-bubble:hover { transform: scale(1.1); }
-      #lucy-chat-bubble svg { width: 30px; height: 30px; fill: white; }
+      #lucy-chat-bubble:hover { transform: scale(1.05); }
+      #lucy-chat-bubble svg { width: 28px; height: 28px; fill: white; }
 
       #lucy-chat-window {
         position: absolute; bottom: 80px; right: 0;
-        width: 350px; height: 500px;
-        background: white; border-radius: 12px;
-        box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+        width: 360px; height: 550px;
+        background: white; border-radius: 16px;
+        box-shadow: 0 12px 48px rgba(0,0,0,0.15);
         display: none; flex-direction: column;
         overflow: hidden; border: 1px solid #eee;
       }
       #lucy-chat-window.active { display: flex; }
 
-      .lucy-header { background: ${config.theme_color}; color: white; padding: 15px; font-weight: bold; display: flex; justify-content: space-between; }
-      .lucy-messages { flex: 1; overflow-y: auto; padding: 15px; background: #f8f9fa; display: flex; flex-direction: column; }
-      .lucy-msg { padding: 8px 12px; border-radius: 12px; margin-bottom: 10px; font-size: 14px; max-width: 80%; line-height: 1.4; }
+      .lucy-header { background: ${config.theme_color}; color: white; padding: 18px; font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
+      .lucy-messages { flex: 1; overflow-y: auto; padding: 20px; background: #f8fafc; display: flex; flex-direction: column; gap: 12px; }
+      .lucy-msg { padding: 10px 14px; border-radius: 14px; font-size: 14px; max-width: 85%; line-height: 1.5; }
       .lucy-msg.user { background: ${config.theme_color}; color: white; align-self: flex-end; border-bottom-right-radius: 2px; }
-      .lucy-msg.assistant { background: white; color: #333; align-self: flex-start; border-bottom-left-radius: 2px; border: 1px solid #eee; }
+      .lucy-msg.assistant { background: white; color: #1e293b; align-self: flex-start; border-bottom-left-radius: 2px; border: 1px solid #e2e8f0; }
       
-      .lucy-footer { padding: 10px; border-top: 1px solid #eee; display: flex; gap: 5px; flex-direction: column; }
-      .lucy-input-row { display: flex; gap: 5px; }
-      .lucy-input { flex: 1; border: 1px solid #ddd; border-radius: 20px; padding: 8px 15px; outline: none; }
-      .lucy-send { background: ${config.theme_color}; color: white; border: none; border-radius: 50%; width: 35px; height: 35px; cursor: pointer; }
-      .lucy-controls { display: flex; gap: 5px; margin-top: 5px; }
-      .lucy-select { font-size: 11px; border: 1px solid #ddd; border-radius: 4px; padding: 2px; }
+      .lucy-footer { padding: 15px; border-top: 1px solid #eee; background: white; }
+      .lucy-input-row { display: flex; gap: 10px; align-items: center; }
+      .lucy-input { flex: 1; border: 1px solid #e2e8f0; border-radius: 24px; padding: 10px 16px; outline: none; font-size: 14px; transition: border 0.2s; }
+      .lucy-input:focus { border-color: ${config.theme_color}; }
+      .lucy-send { background: ${config.theme_color}; color: white; border: none; border-radius: 50%; width: 38px; height: 38px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: opacity 0.2s; }
+      .lucy-send:hover { opacity: 0.9; }
     `;
     document.head.appendChild(style);
 
-    // 2. Inject HTML
     const container = document.createElement('div');
     container.id = 'lucy-widget-container';
     container.innerHTML = `
       <div id="lucy-chat-window">
         <div class="lucy-header">
           <span>${config.bot_name}</span>
-          <span style="cursor:pointer" id="lucy-close">&times;</span>
+          <span style="cursor:pointer; font-size: 20px;" id="lucy-close">&times;</span>
         </div>
         <div id="lucy-messages" class="lucy-messages"></div>
         <div class="lucy-footer">
-          <div class="lucy-controls">
-            <select id="lucy-language" class="lucy-select">
-              <option value="en">English</option>
-              <option value="am">Amharic</option>
-              <option value="om">Oromo</option>
-              <option value="ti">Tigrinya</option>
-              <option value="so">Somali</option>
-            </select>
-            <select id="lucy-sector" class="lucy-select">
-              <option value="general">General</option>
-              <option value="banking">Banking</option>
-              <option value="telecom">Telecom</option>
-            </select>
-          </div>
           <div class="lucy-input-row">
-            <input type="text" id="lucy-input" class="lucy-input" placeholder="Type a message...">
-            <button id="lucy-send" class="lucy-send">➤</button>
+            <input type="text" id="lucy-input" class="lucy-input" placeholder="Ask a question...">
+            <button id="lucy-send" class="lucy-send">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+            </button>
           </div>
         </div>
       </div>
       <div id="lucy-chat-bubble">
-        <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+        <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
       </div>
     `;
     document.body.appendChild(container);
@@ -171,14 +150,17 @@
 
     const history = getHistory();
     const context = history.map(m => `${m.role}: ${m.content}`).join("\n");
-    const language = document.getElementById('lucy-language').value;
-    const sector = document.getElementById('lucy-sector').value;
 
     try {
       const res = await fetch(API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-API-KEY': CLIENT_KEY },
-        body: JSON.stringify({ user_query: text, language, sector, context })
+        body: JSON.stringify({ 
+          user_query: text, 
+          context: context,
+          language: 'auto', // Let Gemini detect the language
+          sector: 'admin_defined' 
+        })
       });
       const data = await res.json();
       appendMsg(data.reply, 'assistant');
@@ -191,7 +173,5 @@
     }
   }
 
-  // Start
   initWidget();
-
 })();
