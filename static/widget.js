@@ -1,6 +1,10 @@
 (function() {
   const CLIENT_KEY = window.__LUCY_CLIENT_KEY__ || "dev-client-key";
-  const BASE_URL = window.location.origin; // Dynamically detect host
+  
+  // Dynamically determine the API URL based on where this script was loaded from
+  const scriptSource = document.currentScript ? document.currentScript.src : "http://localhost:5000";
+  const BASE_URL = new URL(scriptSource).origin;
+  
   const API_URL = `${BASE_URL}/api/support`;
   const CONFIG_URL = `${BASE_URL}/api/widget-config?key=${CLIENT_KEY}`;
 
