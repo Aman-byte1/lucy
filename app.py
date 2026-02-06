@@ -1,9 +1,10 @@
 import os
 import time
 import json
+import traceback
 from functools import wraps
 from dotenv import load_dotenv
-from flask import Flask, request, jsonify, render_template, abort, session, redirect, url_for
+from flask import Flask, request, jsonify, render_template, abort, session, redirect, url_for, send_from_directory
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_cors import CORS
 import pypdf
@@ -27,6 +28,17 @@ else:
     UPLOAD_FOLDER = "uploads"
 
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+# Default Configuration
+DEFAULT_CONFIG = {
+    "system_prompt": "You are a helpful, culturally-aware customer support assistant. Respond ONLY in the target language specified. Be empathetic and use local idioms where appropriate. Avoid hallucinations.",
+    "knowledge_base": "Lucy AI is a startup providing multilingual support. We specialize in low-resource African languages like Amharic, Oromo, Tigrinya, and Somali.",
+    "welcome_message": "Hello! How can I help you today?",
+    "temperature": 0.7,
+    "client_api_key": "lucy-dev-12345",
+    "bot_name": "Lucy AI",
+    "theme_color": "#0d6efd"
+}
 
 try:
     import google.generativeai as genai
@@ -72,11 +84,11 @@ def save_users(users):
 
 def load_config():
     if not os.path.exists(BOT_CONFIG_FILE):
-        # On Vercel, if /tmp/bot_config.json missing, copy from source if avail
-        if IS_VERCEL and os.path.exists("bot_config.json"):
+        # On Vercel, try to load from local source if available
+        if os.path.exists("bot_config.json"):
             try:
                 with open("bot_config.json", 'r') as src: data = json.load(src)
-                save_config(data)
+                save_config(data) # try to persist to /tmp
                 return data
             except: pass
         return DEFAULT_CONFIG.copy()
@@ -128,7 +140,7 @@ def build_prompt(user_query, language, context, sector):
     config = load_config()
     full_context = f"{config.get('knowledge_base', '')}\n\n{context or ''}"
     system = config.get('system_prompt', DEFAULT_CONFIG['system_prompt'])
-    parts = [f"SYSTEM INSTRUCTIONS: {system}", f"SECTOR: {sector}", f"KNOWLEDGE BASE: {full_context}", f"LANGUAGE: {language}", f"USER: {user_query}"]
+    parts = [f"SYSTEM INSTRUCTIONS: {system}", f"SECTOR: {sector}", f"KNOWLEDGE BASE / CONTEXT: {full_context}", f"TARGET LANGUAGE: {language}", f"USER QUERY: {user_query}"]
     return "\n\n".join(parts)
 
 def call_gemini(prompt, language):
@@ -142,10 +154,16 @@ def call_gemini(prompt, language):
     except Exception as e: return {"reply": f"Error: {str(e)}", "usage": {"tokens": 0}}
 
 # --- Routes ---
+
+@app.route("/favicon.ico")
+def favicon():
+    return send_from_directory(os.path.join(app.root_path, 'static'), 'favicon.ico', mimetype='image/vnd.microsoft.icon')
+
 @app.route("/api/signup", methods=["POST"])
 def signup():
     data = request.json
     email, password = data.get("email"), data.get("password")
+    if not email or not password: return jsonify({"error": "Missing fields"}), 400
     users = load_users()
     if email in users: return jsonify({"error": "User exists"}), 400
     users[email] = {"password": generate_password_hash(password)}
@@ -162,7 +180,7 @@ def login():
     if user and check_password_hash(user['password'], password):
         session['user'] = email
         return jsonify({"status": "success"})
-    return jsonify({"error": "Invalid"}), 401
+    return jsonify({"error": "Invalid credentials"}), 401
 
 @app.route("/logout")
 def logout():
@@ -202,12 +220,16 @@ def upload_file():
 def support():
     data = request.get_json() or {}
     user_query, lang, context, sector = data.get("user_query"), data.get("language", "en"), data.get("context"), data.get("sector", "general")
+    if not user_query: return jsonify({"error": "user_query is required"}), 400
     prompt = build_prompt(user_query, lang, context, sector)
     result = call_gemini(prompt, lang)
     return jsonify(result)
 
 @app.route("/auth")
 def auth_page(): return render_template("auth.html")
+
+@app.route("/admin")
+def admin_page(): return render_template("admin.html")
 
 @app.route("/dashboard")
 @login_required
@@ -218,11 +240,8 @@ def index(): return render_template("index.html")
 
 @app.errorhandler(Exception)
 def handle_exception(e):
-    # Log the error to Vercel console
     print(f"Lucy AI ERROR: {str(e)}")
-    import traceback
     print(traceback.format_exc())
-    # Return JSON error
     return jsonify({"error": str(e), "type": str(type(e).__name__)}), 500
 
 if __name__ == "__main__":
