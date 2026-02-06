@@ -1,5 +1,6 @@
 Flask>=2.0
 flask-cors>=3.0
-# pin a compatible google-generativeai release available on PyPI
 google-generativeai==0.8.6
 python-dotenv>=1.0
+pypdf>=3.0.0
+werkzeug>=2.0.0
