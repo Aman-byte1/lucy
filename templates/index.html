@@ -6,37 +6,74 @@
     <title>Lucy AI | Multilingual Support for African Languages</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
-        :root { --primary-color: #0d6efd; --secondary-color: #6c757d; }
-        body { font-family: 'Inter', sans-serif; color: #333; }
-        .hero { background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); padding: 100px 0; }
-        .feature-icon { font-size: 2.5rem; color: var(--primary-color); margin-bottom: 1rem; }
-        .demo-section { background-color: #ffffff; padding: 80px 0; border-top: 1px solid #eee; }
-        #chat-demo { max-width: 450px; margin: 0 auto; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); overflow: hidden; border: 1px solid #ddd; }
-        #messages { height: 350px; overflow-y: auto; padding: 20px; background: #fff; display: flex; flex-direction: column; }
-        .msg { padding: 10px 15px; border-radius: 18px; margin-bottom: 12px; max-width: 85%; font-size: 0.95rem; line-height: 1.4; }
-        .msg.user { background: var(--primary-color); color: white; align-self: flex-end; border-bottom-right-radius: 4px; }
-        .msg.assistant { background: #f1f3f5; color: #333; align-self: flex-start; border-bottom-left-radius: 4px; }
-        .chat-input-group { padding: 15px; background: #f8f9fa; border-top: 1px solid #eee; }
-        footer { background: #212529; color: white; padding: 40px 0; }
-        .nav-link { font-weight: 500; }
+        :root {
+            --primary-color: #4F46E5; /* Indigo */
+            --primary-hover: #4338ca;
+            --secondary-color: #64748b;
+            --bg-color: #f8fafc;
+            --card-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.05);
+            --hover-shadow: 0 20px 40px -5px rgba(0, 0, 0, 0.1);
+        }
+        body { font-family: 'Inter', sans-serif; color: #1e293b; background-color: var(--bg-color); -webkit-font-smoothing: antialiased; }
+        
+        /* Navbar */
+        .navbar { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(226, 232, 240, 0.6); }
+        .navbar-brand { font-weight: 800; color: var(--primary-color) !important; letter-spacing: -0.5px; }
+        .nav-link { font-weight: 500; color: #475569; transition: color 0.2s; }
+        .nav-link:hover { color: var(--primary-color); }
+        .btn-primary { background-color: var(--primary-color); border: none; padding: 10px 24px; font-weight: 600; border-radius: 8px; transition: all 0.2s; }
+        .btn-primary:hover { background-color: var(--primary-hover); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3); }
+
+        /* Hero */
+        .hero { padding: 120px 0 100px; position: relative; overflow: hidden; }
+        .hero::before {
+            content: ''; position: absolute; top: -50%; right: -20%; width: 600px; height: 600px;
+            background: radial-gradient(circle, rgba(79, 70, 229, 0.1) 0%, rgba(255,255,255,0) 70%);
+            z-index: -1; pointer-events: none;
+        }
+        .hero h1 { font-weight: 800; letter-spacing: -1px; line-height: 1.1; margin-bottom: 1.5rem; color: #0f172a; }
+        .hero p { color: #475569; font-size: 1.25rem; line-height: 1.6; }
+        .hero-img { animation: float 6s ease-in-out infinite; border-radius: 20px; box-shadow: var(--hover-shadow); }
+        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-15px); } 100% { transform: translateY(0px); } }
+
+        /* Features */
+        .feature-card { background: white; padding: 40px 30px; border-radius: 16px; border: 1px solid #e2e8f0; transition: all 0.3s ease; height: 100%; }
+        .feature-card:hover { transform: translateY(-5px); box-shadow: var(--hover-shadow); border-color: transparent; }
+        .feature-icon-wrapper { width: 60px; height: 60px; background: #e0e7ff; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; color: var(--primary-color); font-size: 1.75rem; }
+        
+        /* Demo Section */
+        .demo-section { background: white; padding: 100px 0; border-top: 1px solid #e2e8f0; }
+        #chat-demo { max-width: 400px; margin: 0 auto; border-radius: 20px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); overflow: hidden; border: 1px solid #e2e8f0; background: white; }
+        .chat-header { background: var(--primary-color); color: white; padding: 20px; display: flex; align-items: center; justify-content: space-between; }
+        .chat-header h5 { margin: 0; font-weight: 600; font-size: 1rem; }
+        #messages { height: 400px; background: #f8fafc; }
+        .msg { padding: 12px 16px; font-size: 0.95rem; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .msg.user { background: var(--primary-color); color: white; border-bottom-right-radius: 2px; }
+        .msg.assistant { background: white; color: #333; border-bottom-left-radius: 2px; border: 1px solid #e2e8f0; }
+
+        footer { background: #0f172a; color: #94a3b8; padding: 60px 0; }
+        footer h4 { color: white; font-weight: 700; margin-bottom: 1.5rem; }
+        footer a { color: #94a3b8; transition: color 0.2s; }
+        footer a:hover { color: white; }
     </style>
 </head>
 <body>
 
 <!-- Navbar -->
-<nav class="navbar navbar-expand-lg navbar-light bg-white sticky-top border-bottom">
+<nav class="navbar navbar-expand-lg fixed-top">
     <div class="container">
-        <a class="navbar-brand fw-bold text-primary" href="#">LUCY AI</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <a class="navbar-brand" href="#"><i class="bi bi-robot me-2"></i>LUCY AI</a>
+        <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ms-auto">
-                <li class="nav-item"><a class="nav-link" href="#features">Features</a></li>
-                <li class="nav-item"><a class="nav-link" href="#demo">Demo</a></li>
-                <li class="nav-item"><a class="nav-link" href="/auth">Dashboard</a></li>
-                <li class="nav-item"><a class="btn btn-primary ms-lg-3" href="/auth">Get Started</a></li>
+            <ul class="navbar-nav ms-auto align-items-center">
+                <li class="nav-item"><a class="nav-link px-3" href="#features">Features</a></li>
+                <li class="nav-item"><a class="nav-link px-3" href="#demo">Demo</a></li>
+                <li class="nav-item"><a class="nav-link px-3" href="/auth">Login</a></li>
+                <li class="nav-item ms-lg-2"><a class="btn btn-primary" href="/auth">Get Started</a></li>
             </ul>
         </div>
     </div>
@@ -46,43 +83,57 @@
 <section class="hero">
     <div class="container">
         <div class="row align-items-center">
-            <div class="col-lg-6">
-                <h1 class="display-4 fw-bold mb-4">AI Support for Every Language in Africa</h1>
-                <p class="lead mb-5 text-secondary">Break the language barrier. Build custom AI support agents that speak Amharic, Oromo, Tigrinya, Somali, and more—specialized for your business data.</p>
+            <div class="col-lg-6 mb-5 mb-lg-0">
+                <span class="badge bg-indigo-100 text-primary mb-3 px-3 py-2 rounded-pill bg-opacity-10 border border-primary border-opacity-10 fw-semibold">
+                    ✨ Multilingual Support Reimagined
+                </span>
+                <h1 class="display-4">Speak your customers' <span class="text-primary">native language.</span></h1>
+                <p class="lead mb-5">Deploy AI agents fluent in Amharic, Oromo, Tigrinya, and Somali. Trained on your data, tailored for your business.</p>
                 <div class="d-flex gap-3">
-                    <a href="/auth" class="btn btn-primary btn-lg px-4">Build Your Bot</a>
-                    <a href="#demo" class="btn btn-outline-dark btn-lg px-4">View Demo</a>
+                    <a href="/auth" class="btn btn-primary btn-lg px-5 py-3 shadow-lg">Start Building Free</a>
+                    <a href="#demo" class="btn btn-outline-secondary btn-lg px-5 py-3 border-2 fw-semibold">Try Demo</a>
+                </div>
+                <div class="mt-5 d-flex align-items-center gap-4 text-secondary small fw-medium">
+                    <span><i class="bi bi-check-circle-fill text-primary me-1"></i> No Credit Card</span>
+                    <span><i class="bi bi-check-circle-fill text-primary me-1"></i> 5-Min Setup</span>
+                    <span><i class="bi bi-check-circle-fill text-primary me-1"></i> 24/7 Uptime</span>
                 </div>
             </div>
-            <div class="col-lg-6 mt-5 mt-lg-0 text-center">
-                <img src="https://img.freepik.com/free-vector/customer-support-flat-design-illustration_23-2148889374.jpg" alt="Support Illustration" class="img-fluid rounded shadow-sm" style="max-height: 400px;">
+            <div class="col-lg-6 text-center">
+                <img src="https://img.freepik.com/free-vector/chat-bot-concept-illustration_114360-5522.jpg" alt="AI Assistant" class="img-fluid hero-img">
             </div>
         </div>
     </div>
 </section>
 
 <!-- Features Section -->
-<section id="features" class="py-5">
+<section id="features" class="py-5 bg-white">
     <div class="container py-5">
-        <div class="text-center mb-5">
-            <h2 class="fw-bold">Why Lucy AI?</h2>
-            <p class="text-secondary">The first LLM-powered platform built for low-resource languages.</p>
+        <div class="text-center mb-5 mw-md mx-auto" style="max-width: 600px;">
+            <h2 class="fw-bold mb-3">Built for African Businesses</h2>
+            <p class="text-secondary fs-5">We bridge the gap between advanced AI and local languages, enabling you to support every customer.</p>
         </div>
         <div class="row g-4">
-            <div class="col-md-4 text-center">
-                <div class="feature-icon"><i class="bi bi-translate"></i></div>
-                <h4>Truly Multilingual</h4>
-                <p class="text-secondary">Native support for Amharic, Oromo, Tigrinya, and Somali with cultural nuance and local idioms.</p>
+            <div class="col-md-4">
+                <div class="feature-card text-center">
+                    <div class="feature-icon-wrapper"><i class="bi bi-translate"></i></div>
+                    <h4 class="fw-bold mb-3">Native Translation</h4>
+                    <p class="text-secondary">Forget awkward auto-translate. Lucy understands cultural nuances, idioms, and context in 4+ local languages.</p>
+                </div>
             </div>
-            <div class="col-md-4 text-center">
-                <div class="feature-icon"><i class="bi bi-file-earmark-text"></i></div>
-                <h4>Knowledge Base</h4>
-                <p class="text-secondary">Upload PDFs or paste text. Our AI learns your business specific data to provide accurate answers.</p>
+            <div class="col-md-4">
+                <div class="feature-card text-center">
+                    <div class="feature-icon-wrapper"><i class="bi bi-database-check"></i></div>
+                    <h4 class="fw-bold mb-3">Custom Knowledge</h4>
+                    <p class="text-secondary">Upload your PDFs, FAQs, and product docs. Lucy learns instantly and answers based strictly on your data.</p>
+                </div>
             </div>
-            <div class="col-md-4 text-center">
-                <div class="feature-icon"><i class="bi bi-code-slash"></i></div>
-                <h4>Easy Embed</h4>
-                <p class="text-secondary">One line of code to add a beautiful chat widget to any website. No coding required.</p>
+            <div class="col-md-4">
+                <div class="feature-card text-center">
+                    <div class="feature-icon-wrapper"><i class="bi bi-code-square"></i></div>
+                    <h4 class="fw-bold mb-3">Zero-Code Embed</h4>
+                    <p class="text-secondary">Copy one line of JavaScript and you're live. Works on WordPress, Shopify, React, and custom sites.</p>
+                </div>
             </div>
         </div>
     </div>
@@ -91,47 +142,58 @@
 <!-- Demo Section -->
 <section id="demo" class="demo-section">
     <div class="container">
-        <div class="row align-items-center">
-            <div class="col-lg-5 mb-5 mb-lg-0">
-                <h2 class="fw-bold mb-4">See it in action</h2>
-                <p class="mb-4 text-secondary">Try our live widget demo. Switch between languages and sectors to see how Lucy adapts her tone and knowledge.</p>
-                <ul class="list-unstyled">
-                    <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i> Voice Input Support</li>
-                    <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i> Real-time Translation</li>
-                    <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i> Sector-specific Expertise</li>
-                </ul>
+        <div class="row align-items-center justify-content-center">
+            <div class="col-lg-5 mb-5 mb-lg-0 pe-lg-5">
+                <h2 class="fw-bold mb-4">Experience the Magic</h2>
+                <p class="mb-4 text-secondary fs-5">Test Lucy right now. Try switching languages or asking about specific sectors like Banking or Telecom.</p>
+                
+                <div class="d-flex flex-column gap-3">
+                    <div class="d-flex align-items-start">
+                        <div class="bg-primary bg-opacity-10 p-2 rounded me-3 text-primary"><i class="bi bi-mic-fill"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Voice Enabled</h6>
+                            <p class="text-secondary small m-0">Speak naturally in your language.</p>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-start">
+                        <div class="bg-primary bg-opacity-10 p-2 rounded me-3 text-primary"><i class="bi bi-lightning-charge-fill"></i></div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Instant Responses</h6>
+                            <p class="text-secondary small m-0">Powered by Gemini 1.5 Flash.</p>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="col-lg-7">
+            <div class="col-lg-6">
                 <div id="chat-demo">
-                    <div class="bg-primary text-white p-3 d-flex justify-content-between align-items-center">
-                        <span class="fw-bold">Lucy Support</span>
-                        <div class="d-flex gap-2">
-                            <select id="language" class="form-select form-select-sm" style="width: auto;">
-                                <option value="en">English</option>
-                                <option value="am">Amharic</option>
-                                <option value="om">Oromo</option>
-                                <option value="ti">Tigrinya</option>
-                                <option value="so">Somali</option>
-                            </select>
+                    <div class="chat-header">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="bg-white text-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;"><i class="bi bi-robot"></i></div>
+                            <div>
+                                <h5 class="mb-0">Lucy Support</h5>
+                                <small class="opacity-75" style="font-size: 0.75rem;">● Online</small>
+                            </div>
                         </div>
+                        <select id="language" class="form-select form-select-sm border-0 bg-white bg-opacity-25 text-white" style="width: auto; background-image: none;">
+                            <option value="en" class="text-dark">🇺🇸 EN</option>
+                            <option value="am" class="text-dark">🇪🇹 AM</option>
+                            <option value="om" class="text-dark">🇪🇹 OM</option>
+                        </select>
                     </div>
-                    <div id="messages">
-                        <div class="msg assistant">Hello! I'm Lucy. How can I assist you today?</div>
+                    <div id="messages" class="p-3 d-flex flex-column gap-2 overflow-auto">
+                        <div class="msg assistant">👋 Hello! I'm Lucy. Ask me anything about our services.</div>
                     </div>
-                    <div class="chat-input-group">
+                    <div class="p-3 bg-white border-top">
                         <div class="input-group">
-                            <input type="text" id="input" class="form-control" placeholder="Type your message...">
-                            <button class="btn btn-primary" id="send">Send</button>
-                            <button class="btn btn-outline-secondary" id="voice"><i class="bi bi-mic"></i></button>
+                            <input type="text" id="input" class="form-control border-end-0 bg-light" placeholder="Type a message..." style="border-radius: 20px 0 0 20px;">
+                            <button class="btn btn-light border border-start-0 text-secondary" id="voice"><i class="bi bi-mic"></i></button>
+                            <button class="btn btn-primary" id="send" style="border-radius: 0 20px 20px 0;"><i class="bi bi-send-fill"></i></button>
                         </div>
-                        <div class="mt-2">
-                            <select id="sector" class="form-select form-select-sm">
-                                <option value="general">General Support</option>
-                                <option value="banking">Banking & Finance</option>
-                                <option value="telecom">Telecom Services</option>
-                                <option value="gov">Government Portal</option>
-                            </select>
-                        </div>
+                        <select id="sector" class="form-select form-select-sm mt-2 border-0 text-muted small text-center bg-transparent">
+                            <option value="general">Sector: General</option>
+                            <option value="banking">Sector: Banking</option>
+                            <option value="telecom">Sector: Telecom</option>
+                        </select>
                     </div>
                 </div>
             </div>
@@ -143,26 +205,46 @@
 <footer>
     <div class="container">
         <div class="row">
-            <div class="col-md-6 mb-4 mb-md-0">
-                <h4 class="fw-bold">LUCY AI</h4>
-                <p class="text-secondary">Empowering African businesses with multilingual AI intelligence.</p>
+            <div class="col-md-5 mb-5 mb-md-0">
+                <h4 class="d-flex align-items-center gap-2"><i class="bi bi-robot"></i> LUCY AI</h4>
+                <p class="text-secondary mb-4" style="max-width: 300px;">Building the future of African customer support with accessible, multilingual AI.</p>
+                <div class="d-flex gap-3">
+                    <a href="#" class="fs-5"><i class="bi bi-twitter"></i></a>
+                    <a href="#" class="fs-5"><i class="bi bi-github"></i></a>
+                    <a href="#" class="fs-5"><i class="bi bi-linkedin"></i></a>
+                </div>
             </div>
-            <div class="col-md-3 mb-4 mb-md-0">
-                <h5 class="mb-3">Links</h5>
-                <ul class="list-unstyled">
-                    <li><a href="#features" class="text-secondary text-decoration-none">Features</a></li>
-                    <li><a href="/dashboard" class="text-secondary text-decoration-none">Dashboard</a></li>
-                    <li><a href="/admin" class="text-secondary text-decoration-none">Admin</a></li>
+            <div class="col-6 col-md-2 mb-4">
+                <h6 class="text-white fw-bold mb-3">Product</h6>
+                <ul class="list-unstyled d-flex flex-column gap-2">
+                    <li><a href="#features" class="text-decoration-none small">Features</a></li>
+                    <li><a href="#demo" class="text-decoration-none small">Demo</a></li>
+                    <li><a href="#" class="text-decoration-none small">Pricing</a></li>
+                </ul>
+            </div>
+            <div class="col-6 col-md-2 mb-4">
+                <h6 class="text-white fw-bold mb-3">Company</h6>
+                <ul class="list-unstyled d-flex flex-column gap-2">
+                    <li><a href="#" class="text-decoration-none small">About</a></li>
+                    <li><a href="#" class="text-decoration-none small">Blog</a></li>
+                    <li><a href="#" class="text-decoration-none small">Careers</a></li>
                 </ul>
             </div>
             <div class="col-md-3">
-                <h5 class="mb-3">Contact</h5>
-                <p class="text-secondary">Email: hello@lucyai.com<br>Location: Addis Ababa, Ethiopia</p>
+                <h6 class="text-white fw-bold mb-3">Stay Updated</h6>
+                <form class="d-flex gap-2">
+                    <input type="email" class="form-control form-control-sm" placeholder="Enter email">
+                    <button class="btn btn-primary btn-sm">Join</button>
+                </form>
             </div>
         </div>
-        <hr class="my-4 border-secondary">
-        <div class="text-center text-secondary small">
-            &copy; 2026 Lucy AI. All rights reserved.
+        <hr class="border-secondary opacity-25 my-5">
+        <div class="d-flex justify-content-between align-items-center flex-wrap">
+            <small class="text-secondary">&copy; 2026 Lucy AI. All rights reserved.</small>
+            <div class="d-flex gap-4">
+                <a href="#" class="text-decoration-none text-secondary small">Privacy</a>
+                <a href="#" class="text-decoration-none text-secondary small">Terms</a>
+            </div>
         </div>
     </div>
 </footer>
