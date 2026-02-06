@@ -202,13 +202,6 @@
                         <div class="card-header">AI Configuration</div>
                         <div class="card-body">
                             <div class="mb-3">
-                                <label class="form-label">Model</label>
-                                <select id="aiModel" class="form-select">
-                                    <option value="gemini-1.5-flash">Gemini 1.5 Flash (Fastest)</option>
-                                    <option value="gemini-1.5-pro">Gemini 1.5 Pro (Best Quality)</option>
-                                </select>
-                            </div>
-                            <div class="mb-3">
                                 <label class="form-label d-flex justify-content-between">
                                     <span>Creativity (Temperature)</span>
                                     <span id="tempValue" class="text-muted small">0.7</span>
@@ -373,7 +366,6 @@
             document.getElementById('apiKey').value = data.client_api_key || "lucy-dev-12345";
             document.getElementById('botName').value = data.bot_name || "Lucy AI";
             document.getElementById('themeColor').value = data.theme_color || "#4F46E5";
-            document.getElementById('aiModel').value = data.model || "gemini-1.5-flash";
             document.getElementById('aiTemp').value = data.temperature || 0.7;
             document.getElementById('tempValue').innerText = data.temperature || 0.7;
             
@@ -425,7 +417,6 @@
             client_api_key: document.getElementById('apiKey').value,
             bot_name: document.getElementById('botName').value,
             theme_color: document.getElementById('themeColor').value,
-            model: document.getElementById('aiModel').value,
             temperature: document.getElementById('aiTemp').value
         };
 

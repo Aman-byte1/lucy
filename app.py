@@ -147,12 +147,11 @@ def call_gemini(prompt, language):
     if not GEMINI_AVAILABLE: return {"reply": "Gemini not configured.", "usage": {"tokens": 0}}
     
     config = load_config()
-    model_name = config.get("model", "gemini-1.5-flash")
     temperature = float(config.get("temperature", 0.7))
 
     try:
         model = genai.GenerativeModel(
-            model_name,
+            "gemini-1.5-flash",
             generation_config=genai.types.GenerationConfig(temperature=temperature)
         )
         response = model.generate_content(prompt)
