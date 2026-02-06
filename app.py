@@ -14,9 +14,18 @@ load_dotenv()
 GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY") or os.getenv("GOOGLE_API_KEY")
 CLIENT_API_KEY = os.getenv("CLIENT_API_KEY", "dev-client-key")
 ADMIN_KEY = os.getenv("ADMIN_KEY", "admin-secret")
-BOT_CONFIG_FILE = "bot_config.json"
-USERS_FILE = "users.json"
-UPLOAD_FOLDER = "/tmp/uploads" if os.environ.get("VERCEL") else "uploads"
+
+IS_VERCEL = "VERCEL" in os.environ
+
+if IS_VERCEL:
+    BOT_CONFIG_FILE = "/tmp/bot_config.json"
+    USERS_FILE = "/tmp/users.json"
+    UPLOAD_FOLDER = "/tmp/uploads"
+else:
+    BOT_CONFIG_FILE = "bot_config.json"
+    USERS_FILE = "users.json"
+    UPLOAD_FOLDER = "uploads"
+
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 try:
@@ -49,22 +58,37 @@ SUPPORTED_LANGUAGES = [
 
 # --- Helpers ---
 def load_users():
-    if not os.path.exists(USERS_FILE): return {}
+    if not os.path.exists(USERS_FILE):
+        return {}
     try:
         with open(USERS_FILE, 'r') as f: return json.load(f)
     except: return {}
 
 def save_users(users):
-    with open(USERS_FILE, 'w') as f: json.dump(users, f)
+    try:
+        with open(USERS_FILE, 'w') as f: json.dump(users, f)
+    except Exception as e:
+        print(f"Error saving users: {e}")
 
 def load_config():
-    if not os.path.exists(BOT_CONFIG_FILE): return DEFAULT_CONFIG.copy()
+    if not os.path.exists(BOT_CONFIG_FILE):
+        # On Vercel, if /tmp/bot_config.json missing, copy from source if avail
+        if IS_VERCEL and os.path.exists("bot_config.json"):
+            try:
+                with open("bot_config.json", 'r') as src: data = json.load(src)
+                save_config(data)
+                return data
+            except: pass
+        return DEFAULT_CONFIG.copy()
     try:
         with open(BOT_CONFIG_FILE, 'r', encoding='utf-8') as f: return json.load(f)
     except: return DEFAULT_CONFIG.copy()
 
 def save_config(config):
-    with open(BOT_CONFIG_FILE, 'w', encoding='utf-8') as f: json.dump(config, f, indent=2)
+    try:
+        with open(BOT_CONFIG_FILE, 'w', encoding='utf-8') as f: json.dump(config, f, indent=2)
+    except Exception as e:
+        print(f"Error saving config: {e}")
 
 def extract_text_from_file(filepath):
     ext = os.path.splitext(filepath)[1].lower()
