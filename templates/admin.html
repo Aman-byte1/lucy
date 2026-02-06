@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Lucy AI Admin</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 10px; border: 1px solid #ddd; text-align: left; }
+        th { background: #f4f4f4; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+    <h1>Lucy AI Admin Dashboard</h1>
+    <div id="status">Loading...</div>
+    <table id="logs">
+        <thead>
+            <tr>
+                <th>Time</th>
+                <th>Endpoint</th>
+                <th>Key</th>
+                <th>Details</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <script>
+        const ADMIN_KEY = prompt("Enter Admin Key:", "admin-secret");
+
+        async function fetchLogs() {
+            try {
+                const res = await fetch('/admin/logs', {
+                    headers: { 'X-ADMIN-KEY': ADMIN_KEY }
+                });
+                if (!res.ok) throw new Error("Unauthorized or Error");
+                const data = await res.json();
+                renderLogs(data.logs);
+                document.getElementById('status').textContent = "Logs loaded.";
+            } catch (e) {
+                document.getElementById('status').textContent = e.message;
+                document.getElementById('status').className = "error";
+            }
+        }
+
+        function renderLogs(logs) {
+            const tbody = document.querySelector('#logs tbody');
+            tbody.innerHTML = '';
+            logs.forEach(log => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${new Date(log.timestamp * 1000).toLocaleString()}</td>
+                    <td>${log.endpoint}</td>
+                    <td>${log.key}</td>
+                    <td><pre>${JSON.stringify(log.payload, null, 2)}</pre></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        fetchLogs();
+    </script>
+</body>
+</html>
