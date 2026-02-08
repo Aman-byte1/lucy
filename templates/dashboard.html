@@ -93,7 +93,10 @@
         .msg.user { background: var(--primary-color); color: white; align-self: flex-end; border-bottom-right-radius: 2px; }
         .msg.assistant { background: white; color: #1e293b; align-self: flex-start; border-bottom-left-radius: 2px; border: 1px solid #e2e8f0; }
         
-        .chat-input { padding: 12px; background: white; border-top: 1px solid #e2e8f0; display: flex; gap: 8px; }
+        .chat-input { padding: 12px; background: white; border-top: 1px solid #e2e8f0; display: flex; gap: 8px; align-items: center; }
+        .mic-btn { background: transparent; color: #64748b; border: 1px solid #e2e8f0; border-radius: 50%; width: 38px; height: 38px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .mic-btn.listening { background: #ef4444; color: white; border-color: #ef4444; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
         
         /* Toast */
         .toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 100; }
@@ -293,6 +296,9 @@
                         <!-- Preview messages -->
                     </div>
                     <div class="chat-input">
+                        <button id="micBtn" class="mic-btn">
+                            <i class="bi bi-mic-fill"></i>
+                        </button>
                         <input type="text" id="userInput" class="form-control rounded-pill border-0 bg-light" placeholder="Message...">
                         <button id="sendBtn" class="btn btn-primary rounded-circle" style="width:38px; height:38px; padding:0"><i class="bi bi-send-fill"></i></button>
                     </div>
@@ -481,34 +487,72 @@
         container.scrollTop = container.scrollHeight;
     }
 
-    async function sendMessage() {
-        const input = document.getElementById('userInput');
-        const text = input.value.trim();
-        if(!text) return;
-        
-        addMsg(text, 'user');
-        input.value = '';
-
-        try {
-            const res = await fetch(API_SUPPORT, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-API-KEY': 'dashboard-demo-key' 
-                },
-                body: JSON.stringify({ user_query: text, language: 'auto', sector: 'admin' })
-            });
-            const data = await res.json();
-            addMsg(data.reply, 'assistant');
-        } catch(e) {
-            addMsg("Connection error", 'assistant');
+        async function sendMessage(enableTTS = false) {
+            const input = document.getElementById('userInput');
+            const text = input.value.trim();
+            if(!text) return;
+    
+            addMsg(text, 'user');
+            input.value = '';
+    
+            try {
+                const res = await fetch(API_SUPPORT, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-API-KEY': 'dashboard-demo-key'
+                    },
+                    body: JSON.stringify({ user_query: text, language: 'auto', sector: 'admin' })     
+                });
+                const data = await res.json();
+                addMsg(data.reply, 'assistant');
+                if(enableTTS) speakText(data.reply);
+            } catch(e) {
+                addMsg("Connection error", 'assistant');
+            }
         }
-    }
-
-    document.getElementById('sendBtn').addEventListener('click', sendMessage);
+    document.getElementById('sendBtn').addEventListener('click', () => sendMessage());
     document.getElementById('userInput').addEventListener('keydown', (e) => {
         if(e.key === 'Enter') sendMessage();
     });
+
+    // --- Voice Logic ---
+    function speakText(text) {
+        if (!('speechSynthesis' in window)) return;
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        window.speechSynthesis.speak(utterance);
+    }
+
+    const micBtn = document.getElementById('micBtn');
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const recognition = new SpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        recognition.lang = 'am-ET';
+
+        micBtn.addEventListener('click', () => {
+            if (micBtn.classList.contains('listening')) {
+                recognition.stop();
+            } else {
+                recognition.start();
+                micBtn.classList.add('listening');
+            }
+        });
+
+        recognition.onresult = (event) => {
+            const transcript = event.results[0][0].transcript;
+            document.getElementById('userInput').value = transcript;
+            micBtn.classList.remove('listening');
+            sendMessage(true);
+        };
+
+        recognition.onerror = () => micBtn.classList.remove('listening');
+        recognition.onend = () => micBtn.classList.remove('listening');
+    } else {
+        micBtn.style.display = 'none';
+    }
 
     // Live color preview
     document.getElementById('themeColor').addEventListener('input', (e) => {
