@@ -158,7 +158,7 @@
         body: JSON.stringify({ 
           user_query: text, 
           context: context,
-          language: 'auto', // Let Gemini detect the language
+          language: 'am', // Default to Amharic
           sector: 'admin_defined' 
         })
       });

@@ -25,6 +25,12 @@ Tasks Completed:
    - Confirmed language support (Amharic test passed).
 
 Next Steps:
-- Enhance cultural nuance in prompts.
-- Add more few-shot examples for Tigrinya and Somali.
 - Finalize documentation for deployment.
+- Integrate more few-shot examples for Somali.
+
+Recent Updates:
+- Defaulted language to Amharic/Oromo/Tigrinya in the backend and widget.
+- Refined internal system prompt for cultural nuance (Geta/Wey etiquette).
+- Simplified Admin Dashboard by moving Knowledge Base and System Prompt "under the code" (hidden from UI but preserved in config).
+- Secured API keys in .env and ensured environment compatibility.
+
