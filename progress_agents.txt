@@ -29,9 +29,10 @@ Next Steps:
 - Integrate more few-shot examples for Somali.
 
 Recent Updates:
-- Upgraded default model to gemini-2.0-flash for better performance and latest features.
-- Defaulted language to Amharic/Oromo/Tigrinya in the backend and widget.
-- Refined internal system prompt for cultural nuance (Geta/Wey etiquette).
-- Simplified Admin Dashboard by moving Knowledge Base and System Prompt "under the code" (hidden from UI but preserved in config).
-- Secured API keys in .env and ensured environment compatibility.
+- Integrated Hugging Face Inference API for high-quality East African ASR and TTS.
+- Added ASR using `facebook/mms-1b-all` for Amharic/Oromo/Tigrinya support.
+- Added TTS using MMS per-language models (e.g., `facebook/mms-tts-amh`).
+- Updated Chat Widget and Dashboard Preview to use server-side ASR/TTS instead of browser-native.
+- Secured HF API Token in .env.
+- Upgraded default model to gemini-2.0-flash (reverted to 1.5-flash-latest for quota, then to gemini-3-flash-preview as requested).
 

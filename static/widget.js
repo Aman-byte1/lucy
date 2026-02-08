@@ -123,44 +123,63 @@
     sendBtn.addEventListener('click', () => sendMessage());
     inputEl.addEventListener('keydown', (e) => { if(e.key === 'Enter') sendMessage(); });
     
-    // Voice Logic
-    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      const recognition = new SpeechRecognition();
-      recognition.continuous = false;
-      recognition.interimResults = false;
-      recognition.lang = 'am-ET'; // Default to Amharic, but could be 'en-US' or auto-detect if possible
+    // Voice Logic (using MediaRecorder for HF MMS ASR)
+    let mediaRecorder;
+    let audioChunks = [];
 
-      micBtn.addEventListener('click', () => {
-        if (micBtn.classList.contains('listening')) {
-          recognition.stop();
-        } else {
-          recognition.start();
-          micBtn.classList.add('listening');
-        }
-      });
-
-      recognition.onresult = (event) => {
-        const transcript = event.results[0][0].transcript;
-        inputEl.value = transcript;
+    micBtn.addEventListener('click', async () => {
+      if (micBtn.classList.contains('listening')) {
+        mediaRecorder.stop();
         micBtn.classList.remove('listening');
-        sendMessage(true); // Auto-send and enable TTS response
-      };
+      } else {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          mediaRecorder = new MediaRecorder(stream);
+          audioChunks = [];
 
-      recognition.onerror = () => micBtn.classList.remove('listening');
-      recognition.onend = () => micBtn.classList.remove('listening');
-    } else {
-      micBtn.style.display = 'none'; // Hide if not supported
-    }
+          mediaRecorder.ondataavailable = (event) => {
+            audioChunks.push(event.data);
+          };
+
+          mediaRecorder.onstop = async () => {
+            const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+            micBtn.classList.add('processing');
+            
+            try {
+              const res = await fetch(`${BASE_URL}/api/asr?lang=amh`, {
+                method: 'POST',
+                body: audioBlob
+              });
+              const data = await res.json();
+              if (data.text) {
+                inputEl.value = data.text;
+                sendMessage(true);
+              }
+            } catch (e) { console.error("ASR Error", e); }
+            micBtn.classList.remove('processing');
+          };
+
+          mediaRecorder.start();
+          micBtn.classList.add('listening');
+        } catch (e) {
+          console.error("Mic access denied", e);
+        }
+      }
+    });
   }
 
-  function speakText(text) {
-    if (!('speechSynthesis' in window)) return;
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    // Try to find a matching voice if possible, though support for African languages is limited in browsers
-    // utterance.lang = 'am-ET'; 
-    window.speechSynthesis.speak(utterance);
+  async function speakText(text) {
+    try {
+      const res = await fetch(`${BASE_URL}/api/tts`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: text, lang: 'am' })
+      });
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const audio = new Audio(url);
+      audio.play();
+    } catch (e) { console.error("TTS Error", e); }
   }
 
   function loadHistoryAndWelcome() {

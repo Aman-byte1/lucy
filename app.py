@@ -9,9 +9,12 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_cors import CORS
 import pypdf
 
+import requests
+
 load_dotenv()
 
 GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
+HF_API_TOKEN = os.environ.get("HF_API_TOKEN")
 CLIENT_API_KEY = os.getenv("CLIENT_API_KEY", "dev-client-key")
 ADMIN_KEY = os.getenv("ADMIN_KEY", "admin-secret")
 
@@ -266,6 +269,46 @@ def support():
     log_usage(key, "/api/support", {"query": user_query, "reply": result.get("reply"), "usage": result.get("usage")})
     
     return jsonify(result)
+
+@app.route("/api/asr", methods=["POST"])
+def asr():
+    if not HF_API_TOKEN: return jsonify({"error": "HF Token missing"}), 500
+    audio_data = request.data
+    lang = request.args.get("lang", "amh") # MMS uses 3-letter codes
+    
+    API_URL = "https://api-inference.huggingface.co/models/facebook/mms-1b-all"
+    headers = {"Authorization": f"Bearer {HF_API_TOKEN}"}
+    
+    try:
+        response = requests.post(API_URL, headers=headers, data=audio_data)
+        return jsonify(response.json())
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/api/tts", methods=["POST"])
+def tts():
+    if not HF_API_TOKEN: return jsonify({"error": "HF Token missing"}), 500
+    data = request.json
+    text = data.get("text")
+    lang = data.get("lang", "amh")
+    
+    # MMS TTS models are per-language
+    model_map = {
+        "am": "facebook/mms-tts-amh",
+        "om": "facebook/mms-tts-orm",
+        "ti": "facebook/mms-tts-tir",
+        "so": "facebook/mms-tts-som"
+    }
+    model = model_map.get(lang, "facebook/mms-tts-amh")
+    
+    API_URL = f"https://api-inference.huggingface.co/models/{model}"
+    headers = {"Authorization": f"Bearer {HF_API_TOKEN}"}
+    
+    try:
+        response = requests.post(API_URL, headers=headers, json={"inputs": text})
+        return (response.content, 200, {'Content-Type': 'audio/wav'})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route("/auth")
 def auth_page(): return render_template("auth.html")

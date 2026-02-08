@@ -487,78 +487,89 @@
         container.scrollTop = container.scrollHeight;
     }
 
-        async function sendMessage(enableTTS = false) {
-            const input = document.getElementById('userInput');
-            const text = input.value.trim();
-            if(!text) return;
-    
-            addMsg(text, 'user');
-            input.value = '';
-    
-            try {
-                const res = await fetch(API_SUPPORT, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-API-KEY': 'dashboard-demo-key'
-                    },
-                    body: JSON.stringify({ user_query: text, language: 'auto', sector: 'admin' })     
-                });
-                const data = await res.json();
-                addMsg(data.reply, 'assistant');
-                if(enableTTS) speakText(data.reply);
-            } catch(e) {
-                addMsg("Connection error", 'assistant');
+            async function sendMessage(enableTTS = false) {
+                const input = document.getElementById('userInput');
+                const text = input.value.trim();
+                if(!text) return;
+        
+                addMsg(text, 'user');
+                input.value = '';
+        
+                try {
+                    const res = await fetch(API_SUPPORT, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-API-KEY': 'dashboard-demo-key'
+                        },
+                        body: JSON.stringify({ user_query: text, language: 'auto', sector: 'admin' })     
+                    });
+                    const data = await res.json();
+                    addMsg(data.reply, 'assistant');
+                    if(enableTTS) speakText(data.reply);
+                } catch(e) {
+                    addMsg("Connection error", 'assistant');
+                }
             }
-        }
-    document.getElementById('sendBtn').addEventListener('click', () => sendMessage());
-    document.getElementById('userInput').addEventListener('keydown', (e) => {
-        if(e.key === 'Enter') sendMessage();
-    });
-
-    // --- Voice Logic ---
-    function speakText(text) {
-        if (!('speechSynthesis' in window)) return;
-        window.speechSynthesis.cancel();
-        const utterance = new SpeechSynthesisUtterance(text);
-        window.speechSynthesis.speak(utterance);
-    }
-
-    const micBtn = document.getElementById('micBtn');
-    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        const recognition = new SpeechRecognition();
-        recognition.continuous = false;
-        recognition.interimResults = false;
-        recognition.lang = 'am-ET';
-
-        micBtn.addEventListener('click', () => {
-            if (micBtn.classList.contains('listening')) {
-                recognition.stop();
-            } else {
-                recognition.start();
-                micBtn.classList.add('listening');
+        
+            document.getElementById('sendBtn').addEventListener('click', () => sendMessage());
+            document.getElementById('userInput').addEventListener('keydown', (e) => {
+                if(e.key === 'Enter') sendMessage();
+            });
+        
+            // --- Voice Logic (HF MMS) ---
+            const micBtn = document.getElementById('micBtn');
+            let mediaRecorder;
+            let audioChunks = [];
+        
+            micBtn.addEventListener('click', async () => {
+                if (micBtn.classList.contains('listening')) {
+                    mediaRecorder.stop();
+                    micBtn.classList.remove('listening');
+                } else {
+                    try {
+                        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                        mediaRecorder = new MediaRecorder(stream);
+                        audioChunks = [];
+        
+                        mediaRecorder.ondataavailable = (event) => { audioChunks.push(event.data); };
+                        mediaRecorder.onstop = async () => {
+                            const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                            micBtn.classList.add('processing');
+                            try {
+                                const res = await fetch('/api/asr?lang=amh', { method: 'POST', body: audioBlob });
+                                const data = await res.json();
+                                if (data.text) {
+                                    document.getElementById('userInput').value = data.text;
+                                    sendMessage(true);
+                                }
+                            } catch (e) { console.error(e); }
+                            micBtn.classList.remove('processing');
+                        };
+                        mediaRecorder.start();
+                        micBtn.classList.add('listening');
+                    } catch (e) { console.error(e); }
+                }
+            });
+        
+            async function speakText(text) {
+                try {
+                    const res = await fetch('/api/tts', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ text: text, lang: 'am' })
+                    });
+                    const blob = await res.blob();
+                    const url = URL.createObjectURL(blob);
+                    const audio = new Audio(url);
+                    audio.play();
+                } catch (e) { console.error(e); }
             }
-        });
-
-        recognition.onresult = (event) => {
-            const transcript = event.results[0][0].transcript;
-            document.getElementById('userInput').value = transcript;
-            micBtn.classList.remove('listening');
-            sendMessage(true);
-        };
-
-        recognition.onerror = () => micBtn.classList.remove('listening');
-        recognition.onend = () => micBtn.classList.remove('listening');
-    } else {
-        micBtn.style.display = 'none';
-    }
-
-    // Live color preview
-    document.getElementById('themeColor').addEventListener('input', (e) => {
-        document.documentElement.style.setProperty('--primary-color', e.target.value);
-    });
-    document.getElementById('userMsgColor').addEventListener('input', (e) => {
+        
+            // Live color preview
+            document.getElementById('themeColor').addEventListener('input', (e) => {
+                document.documentElement.style.setProperty('--primary-color', e.target.value);
+            });    document.getElementById('userMsgColor').addEventListener('input', (e) => {
         updatePreviewCurrent();
     });
     document.getElementById('botMsgColor').addEventListener('input', (e) => {
