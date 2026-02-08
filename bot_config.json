@@ -3,5 +3,5 @@
   "knowledge_base": "Lucy AI is a startup providing multilingual support. We specialize in low-resource African languages like Amharic, Oromo, Tigrinya, and Somali.",
   "welcome_message": "Hello! How can I help you today?",
   "temperature": 0.7,
-  "model": "gemini-1.5-flash-latest"
+  "model": "gemini-3-flash-preview"
 }
