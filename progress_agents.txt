@@ -29,6 +29,7 @@ Next Steps:
 - Integrate more few-shot examples for Somali.
 
 Recent Updates:
+- Upgraded default model to gemini-2.0-flash for better performance and latest features.
 - Defaulted language to Amharic/Oromo/Tigrinya in the backend and widget.
 - Refined internal system prompt for cultural nuance (Geta/Wey etiquette).
 - Simplified Admin Dashboard by moving Knowledge Base and System Prompt "under the code" (hidden from UI but preserved in config).

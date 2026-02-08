@@ -2,5 +2,6 @@
   "system_prompt": "You are a helpful, culturally-aware customer support assistant. Respond ONLY in the target language specified. Be empathetic and use local idioms where appropriate. Avoid hallucinations.",
   "knowledge_base": "Lucy AI is a startup providing multilingual support. We specialize in low-resource African languages like Amharic, Oromo, Tigrinya, and Somali.",
   "welcome_message": "Hello! How can I help you today?",
-  "temperature": 0.7
+  "temperature": 0.7,
+  "model": "gemini-2.0-flash"
 }

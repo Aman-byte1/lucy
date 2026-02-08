@@ -35,7 +35,7 @@ DEFAULT_CONFIG = {
     "knowledge_base": "Lucy AI is a startup providing multilingual support. We specialize in low-resource African languages like Amharic, Oromo, Tigrinya, and Somali.",
     "welcome_message": "Hello! How can I help you today?",
     "temperature": 0.7,
-    "model": "gemini-1.5-flash",
+    "model": "gemini-2.0-flash",
     "client_api_key": "lucy-dev-12345",
     "bot_name": "Lucy AI",
     "theme_color": "#4F46E5"
@@ -162,7 +162,7 @@ def call_gemini(prompt, language):
     
     config = load_config()
     temperature = float(config.get("temperature", 0.7))
-    model_name = config.get("model", "gemini-1.5-flash-latest")
+    model_name = config.get("model", "gemini-2.0-flash")
 
     try:
         model = genai.GenerativeModel(
