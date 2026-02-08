@@ -64,6 +64,10 @@
       .lucy-input:focus { border-color: ${config.theme_color}; }
       .lucy-send { background: ${config.send_btn_color}; color: white; border: none; border-radius: 50%; width: 38px; height: 38px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: opacity 0.2s; }
       .lucy-send:hover { opacity: 0.9; }
+      .lucy-mic { background: transparent; color: #64748b; border: 1px solid #e2e8f0; border-radius: 50%; width: 38px; height: 38px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+      .lucy-mic:hover { color: ${config.theme_color}; border-color: ${config.theme_color}; background: #f8fafc; }
+      .lucy-mic.listening { background: #ef4444; color: white; border-color: #ef4444; animation: pulse 1.5s infinite; }
+      @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
     `;
     document.head.appendChild(style);
 
@@ -78,6 +82,9 @@
         <div id="lucy-messages" class="lucy-messages"></div>
         <div class="lucy-footer">
           <div class="lucy-input-row">
+            <button id="lucy-mic" class="lucy-mic" title="Speak">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+            </button>
             <input type="text" id="lucy-input" class="lucy-input" placeholder="Ask a question...">
             <button id="lucy-send" class="lucy-send">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
@@ -101,6 +108,7 @@
     const closeBtn = document.getElementById('lucy-close');
     const inputEl = document.getElementById('lucy-input');
     const sendBtn = document.getElementById('lucy-send');
+    const micBtn = document.getElementById('lucy-mic');
 
     bubble.addEventListener('click', () => {
       windowEl.classList.toggle('active');
@@ -112,8 +120,47 @@
       windowEl.classList.remove('active');
     });
 
-    sendBtn.addEventListener('click', sendMessage);
+    sendBtn.addEventListener('click', () => sendMessage());
     inputEl.addEventListener('keydown', (e) => { if(e.key === 'Enter') sendMessage(); });
+    
+    // Voice Logic
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.lang = 'am-ET'; // Default to Amharic, but could be 'en-US' or auto-detect if possible
+
+      micBtn.addEventListener('click', () => {
+        if (micBtn.classList.contains('listening')) {
+          recognition.stop();
+        } else {
+          recognition.start();
+          micBtn.classList.add('listening');
+        }
+      });
+
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        inputEl.value = transcript;
+        micBtn.classList.remove('listening');
+        sendMessage(true); // Auto-send and enable TTS response
+      };
+
+      recognition.onerror = () => micBtn.classList.remove('listening');
+      recognition.onend = () => micBtn.classList.remove('listening');
+    } else {
+      micBtn.style.display = 'none'; // Hide if not supported
+    }
+  }
+
+  function speakText(text) {
+    if (!('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    // Try to find a matching voice if possible, though support for African languages is limited in browsers
+    // utterance.lang = 'am-ET'; 
+    window.speechSynthesis.speak(utterance);
   }
 
   function loadHistoryAndWelcome() {
@@ -143,7 +190,7 @@
     messagesEl.scrollTop = messagesEl.scrollHeight;
   }
 
-  async function sendMessage() {
+  async function sendMessage(enableTTS = false) {
     const inputEl = document.getElementById('lucy-input');
     const text = inputEl.value.trim();
     if(!text) return;
@@ -168,6 +215,8 @@
       const data = await res.json();
       appendMsg(data.reply, 'assistant');
       
+      if(enableTTS) speakText(data.reply);
+
       history.push({role: 'user', content: text});
       history.push({role: 'assistant', content: data.reply});
       saveHistory(history);
