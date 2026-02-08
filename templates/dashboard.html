@@ -120,7 +120,10 @@
         <div class="brand"><i class="bi bi-robot"></i> Lucy AI</div>
         
         <nav class="nav flex-column nav-pills" role="tablist">
-            <a class="nav-link active" data-bs-toggle="pill" href="#tab-settings">
+            <a class="nav-link active" data-bs-toggle="pill" href="#tab-knowledge">
+                <i class="bi bi-book"></i> Knowledge Base
+            </a>
+            <a class="nav-link" data-bs-toggle="pill" href="#tab-settings">
                 <i class="bi bi-sliders"></i> Settings
             </a>
             <a class="nav-link" data-bs-toggle="pill" href="#tab-activity" onclick="loadActivity()">
@@ -144,8 +147,39 @@
         <!-- Configuration Column -->
         <div class="config-area">
             <div class="tab-content">
+                <!-- Knowledge Tab -->
+                <div class="tab-pane fade show active" id="tab-knowledge">
+                    <h3 class="fw-bold mb-4">Knowledge Base</h3>
+                    
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <span>Text Source</span>
+                            <button class="btn btn-sm btn-outline-danger" onclick="document.getElementById('kbText').value=''">Clear</button>
+                        </div>
+                        <div class="card-body">
+                            <textarea id="kbText" class="form-control mb-3" rows="12" placeholder="Paste your training data, FAQs, or policies here..."></textarea>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted"><i class="bi bi-info-circle"></i> Lucy answers based on this text.</small>
+                                <span class="badge bg-light text-dark border">Text</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">File Import</div>
+                        <div class="card-body">
+                            <div class="upload-box" onclick="document.getElementById('fileUpload').click()">
+                                <i class="bi bi-cloud-upload fs-3 text-primary mb-2"></i>
+                                <div class="fw-medium">Click to Upload PDF/TXT</div>
+                                <small class="text-muted">Max 5MB</small>
+                                <input type="file" id="fileUpload" class="d-none" onchange="uploadFile()">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Settings Tab -->
-                <div class="tab-pane fade show active" id="tab-settings">
+                <div class="tab-pane fade" id="tab-settings">
                     <h3 class="fw-bold mb-4">Bot Settings</h3>
                     
                     <div class="card">
@@ -173,6 +207,10 @@
                                     <span id="tempValue" class="text-muted small">0.7</span>
                                 </label>
                                 <input type="range" class="form-range" id="aiTemp" min="0" max="1" step="0.1" value="0.7" oninput="document.getElementById('tempValue').innerText=this.value">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Custom Instruction (System Prompt)</label>
+                                <textarea id="sysPrompt" class="form-control" rows="3" placeholder="Add custom behavior instructions..."></textarea>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Welcome Message</label>
@@ -322,6 +360,8 @@
             const data = await res.json();
             
             // Populate inputs
+            document.getElementById('kbText').value = data.knowledge_base || "";
+            document.getElementById('sysPrompt').value = data.system_prompt || "";
             document.getElementById('welcomeMsg').value = data.welcome_message || "";
             document.getElementById('apiKey').value = data.client_api_key || "lucy-dev-12345";
             document.getElementById('botName').value = data.bot_name || "Lucy AI";
@@ -371,6 +411,8 @@
         btn.disabled = true;
         
         const config = {
+            knowledge_base: document.getElementById('kbText').value,
+            system_prompt: document.getElementById('sysPrompt').value,
             welcome_message: document.getElementById('welcomeMsg').value,
             client_api_key: document.getElementById('apiKey').value,
             bot_name: document.getElementById('botName').value,
