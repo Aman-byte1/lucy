@@ -162,10 +162,11 @@ def call_gemini(prompt, language):
     
     config = load_config()
     temperature = float(config.get("temperature", 0.7))
+    model_name = config.get("model", "gemini-1.5-flash-latest")
 
     try:
         model = genai.GenerativeModel(
-            "gemini-1.5-flash",
+            model_name,
             generation_config=genai.types.GenerationConfig(temperature=temperature)
         )
         response = model.generate_content(prompt)
