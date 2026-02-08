@@ -7,6 +7,9 @@
   let config = {
     bot_name: "Lucy AI",
     theme_color: "#4F46E5",
+    user_msg_color: "#4F46E5",
+    bot_msg_color: "#ffffff",
+    send_btn_color: "#4F46E5",
     welcome_message: "Hello! How can I help you today?"
   };
 
@@ -52,14 +55,14 @@
       .lucy-header { background: ${config.theme_color}; color: white; padding: 18px; font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
       .lucy-messages { flex: 1; overflow-y: auto; padding: 20px; background: #f8fafc; display: flex; flex-direction: column; gap: 12px; }
       .lucy-msg { padding: 10px 14px; border-radius: 14px; font-size: 14px; max-width: 85%; line-height: 1.5; }
-      .lucy-msg.user { background: ${config.theme_color}; color: white; align-self: flex-end; border-bottom-right-radius: 2px; }
-      .lucy-msg.assistant { background: white; color: #1e293b; align-self: flex-start; border-bottom-left-radius: 2px; border: 1px solid #e2e8f0; }
+      .lucy-msg.user { background: ${config.user_msg_color}; color: white; align-self: flex-end; border-bottom-right-radius: 2px; }
+      .lucy-msg.assistant { background: ${config.bot_msg_color}; color: #1e293b; align-self: flex-start; border-bottom-left-radius: 2px; border: 1px solid #e2e8f0; }
       
       .lucy-footer { padding: 15px; border-top: 1px solid #eee; background: white; }
       .lucy-input-row { display: flex; gap: 10px; align-items: center; }
       .lucy-input { flex: 1; border: 1px solid #e2e8f0; border-radius: 24px; padding: 10px 16px; outline: none; font-size: 14px; transition: border 0.2s; }
       .lucy-input:focus { border-color: ${config.theme_color}; }
-      .lucy-send { background: ${config.theme_color}; color: white; border: none; border-radius: 50%; width: 38px; height: 38px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: opacity 0.2s; }
+      .lucy-send { background: ${config.send_btn_color}; color: white; border: none; border-radius: 50%; width: 38px; height: 38px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: opacity 0.2s; }
       .lucy-send:hover { opacity: 0.9; }
     `;
     document.head.appendChild(style);

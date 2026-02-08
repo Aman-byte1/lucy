@@ -38,7 +38,10 @@ DEFAULT_CONFIG = {
     "model": "gemini-3-flash-preview",
     "client_api_key": "lucy-dev-12345",
     "bot_name": "Lucy AI",
-    "theme_color": "#4F46E5"
+    "theme_color": "#4F46E5",
+    "user_msg_color": "#4F46E5",
+    "bot_msg_color": "#ffffff",
+    "send_btn_color": "#4F46E5"
 }
 
 try:
@@ -212,7 +215,10 @@ def widget_config():
     config = load_config()
     return jsonify({
         "bot_name": config.get("bot_name", "Lucy AI"),
-        "theme_color": config.get("theme_color", "#0d6efd"),
+        "theme_color": config.get("theme_color", "#4F46E5"),
+        "user_msg_color": config.get("user_msg_color", "#4F46E5"),
+        "bot_msg_color": config.get("bot_msg_color", "#ffffff"),
+        "send_btn_color": config.get("send_btn_color", "#4F46E5"),
         "welcome_message": config.get("welcome_message", "Hello!")
     })
 

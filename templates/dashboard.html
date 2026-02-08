@@ -183,16 +183,30 @@
                     <h3 class="fw-bold mb-4">Bot Settings</h3>
                     
                     <div class="card">
-                        <div class="card-header">Appearance</div>
+                        <div class="card-header">Appearance & Branding</div>
                         <div class="card-body">
-                            <div class="row g-3">
-                                <div class="col-md-8">
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-12">
                                     <label class="form-label">Bot Name</label>
                                     <input type="text" id="botName" class="form-control" placeholder="Lucy Support">
                                 </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">Accent Color</label>
+                            </div>
+                            <div class="row g-3">
+                                <div class="col-md-3">
+                                    <label class="form-label">Theme Color</label>
                                     <input type="color" id="themeColor" class="form-control form-control-color w-100" value="#4F46E5">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">User Msg Color</label>
+                                    <input type="color" id="userMsgColor" class="form-control form-control-color w-100" value="#4F46E5">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Bot Msg Color</label>
+                                    <input type="color" id="botMsgColor" class="form-control form-control-color w-100" value="#ffffff">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Send Btn Color</label>
+                                    <input type="color" id="sendBtnColor" class="form-control form-control-color w-100" value="#4F46E5">
                                 </div>
                             </div>
                         </div>
@@ -366,6 +380,9 @@
             document.getElementById('apiKey').value = data.client_api_key || "lucy-dev-12345";
             document.getElementById('botName').value = data.bot_name || "Lucy AI";
             document.getElementById('themeColor').value = data.theme_color || "#4F46E5";
+            document.getElementById('userMsgColor').value = data.user_msg_color || "#4F46E5";
+            document.getElementById('botMsgColor').value = data.bot_msg_color || "#ffffff";
+            document.getElementById('sendBtnColor').value = data.send_btn_color || "#4F46E5";
             document.getElementById('aiTemp').value = data.temperature || 0.7;
             document.getElementById('tempValue').innerText = data.temperature || 0.7;
             
@@ -417,6 +434,9 @@
             client_api_key: document.getElementById('apiKey').value,
             bot_name: document.getElementById('botName').value,
             theme_color: document.getElementById('themeColor').value,
+            user_msg_color: document.getElementById('userMsgColor').value,
+            bot_msg_color: document.getElementById('botMsgColor').value,
+            send_btn_color: document.getElementById('sendBtnColor').value,
             temperature: document.getElementById('aiTemp').value
         };
 
@@ -436,6 +456,20 @@
     function updatePreview(config) {
         document.documentElement.style.setProperty('--primary-color', config.theme_color);
         document.getElementById('previewName').innerText = config.bot_name;
+        
+        // Update live preview message styles
+        const styleId = 'live-preview-styles';
+        let style = document.getElementById(styleId);
+        if (!style) {
+            style = document.createElement('style');
+            style.id = styleId;
+            document.head.appendChild(style);
+        }
+        style.innerHTML = `
+            .msg.user { background: ${config.user_msg_color || config.theme_color} !important; }
+            .msg.assistant { background: ${config.bot_msg_color || '#ffffff'} !important; }
+            #sendBtn { background: ${config.send_btn_color || config.theme_color} !important; }
+        `;
     }
 
     function addMsg(text, role) {
@@ -480,9 +514,28 @@
     document.getElementById('themeColor').addEventListener('input', (e) => {
         document.documentElement.style.setProperty('--primary-color', e.target.value);
     });
+    document.getElementById('userMsgColor').addEventListener('input', (e) => {
+        updatePreviewCurrent();
+    });
+    document.getElementById('botMsgColor').addEventListener('input', (e) => {
+        updatePreviewCurrent();
+    });
+    document.getElementById('sendBtnColor').addEventListener('input', (e) => {
+        updatePreviewCurrent();
+    });
     document.getElementById('botName').addEventListener('input', (e) => {
         document.getElementById('previewName').innerText = e.target.value || "Lucy AI";
     });
+
+    function updatePreviewCurrent() {
+        updatePreview({
+            theme_color: document.getElementById('themeColor').value,
+            bot_name: document.getElementById('botName').value,
+            user_msg_color: document.getElementById('userMsgColor').value,
+            bot_msg_color: document.getElementById('botMsgColor').value,
+            send_btn_color: document.getElementById('sendBtnColor').value
+        });
+    }
 
     loadSettings();
 </script>
