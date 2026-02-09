@@ -169,6 +169,17 @@
                     </div>
 
                     <div class="card">
+                        <div class="card-header">Website Import</div>
+                        <div class="card-body">
+                            <div class="input-group mb-3">
+                                <input type="text" id="fetchUrl" class="form-control" placeholder="https://example.com">
+                                <button class="btn btn-primary" id="fetchBtn" onclick="fetchWebsite()">Fetch Content</button>
+                            </div>
+                            <small class="text-muted"><i class="bi bi-link-45deg"></i> Scrape text content from any public website.</small>
+                        </div>
+                    </div>
+
+                    <div class="card">
                         <div class="card-header">File Import</div>
                         <div class="card-body">
                             <div class="upload-box" onclick="document.getElementById('fileUpload').click()">
@@ -329,10 +340,42 @@
     const API_SUPPORT = "/api/support";
     const API_UPLOAD = "/api/upload";
     const API_ACTIVITY = "/api/activity";
+    const API_FETCH_URL = "/api/fetch-url";
     
     let currentConfig = {};
 
     // --- Config Logic ---
+    async function fetchWebsite() {
+        const urlInput = document.getElementById('fetchUrl');
+        const url = urlInput.value.trim();
+        if (!url) return;
+        
+        const btn = document.getElementById('fetchBtn');
+        const oldText = btn.innerText;
+        btn.innerText = "Fetching...";
+        btn.disabled = true;
+        
+        try {
+            const res = await fetch(API_FETCH_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url: url })
+            });
+            const data = await res.json();
+            if (data.error) throw new Error(data.error);
+            
+            const kb = document.getElementById('kbText');
+            kb.value = (kb.value + "\n\n" + `--- Website: ${data.url} ---\n` + data.text).trim();
+            showToast("Website content fetched successfully!");
+            urlInput.value = "";
+        } catch (e) {
+            alert("Fetch failed: " + e.message);
+        } finally {
+            btn.innerText = oldText;
+            btn.disabled = false;
+        }
+    }
+
     async function uploadFile() {
         const input = document.getElementById('fileUpload');
         const file = input.files[0];

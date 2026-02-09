@@ -29,6 +29,7 @@ Next Steps:
 - Integrate more few-shot examples for Somali.
 
 Recent Updates:
+- Added "Website Import" to Knowledge Base: Scrape text content from any URL directly into training data.
 - Integrated Hugging Face Inference API for high-quality East African ASR and TTS.
 - Added ASR using `facebook/mms-1b-all` for Amharic/Oromo/Tigrinya support.
 - Added TTS using MMS per-language models (e.g., `facebook/mms-tts-amh`).

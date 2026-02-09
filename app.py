@@ -9,7 +9,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_cors import CORS
 import pypdf
 
-import requests
+from bs4 import BeautifulSoup
 
 load_dotenv()
 
@@ -269,6 +269,39 @@ def support():
     log_usage(key, "/api/support", {"query": user_query, "reply": result.get("reply"), "usage": result.get("usage")})
     
     return jsonify(result)
+
+@app.route("/api/fetch-url", methods=["POST"])
+@login_required
+def fetch_url():
+    data = request.json
+    url = data.get("url")
+    if not url: return jsonify({"error": "URL required"}), 400
+    
+    try:
+        if not url.startswith(("http://", "https://")):
+            url = "https://" + url
+            
+        headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"}
+        response = requests.get(url, headers=headers, timeout=10)
+        response.raise_for_status()
+        
+        soup = BeautifulSoup(response.text, 'html.parser')
+        
+        # Remove script and style elements
+        for script in soup(["script", "style"]):
+            script.extract()
+            
+        text = soup.get_text(separator='\n')
+        # Break into lines and remove leading and trailing whitespace
+        lines = (line.strip() for line in text.splitlines())
+        # Break multi-headlines into a line each
+        chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
+        # Drop blank lines
+        clean_text = '\n'.join(chunk for chunk in chunks if chunk)
+        
+        return jsonify({"url": url, "text": clean_text})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route("/api/asr", methods=["POST"])
 def asr():
