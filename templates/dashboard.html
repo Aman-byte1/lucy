@@ -313,7 +313,10 @@
                             </div>
                             <div class="fw-bold fs-6" id="previewName">Lucy AI</div>
                         </div>
-                        <i class="bi bi-three-dots text-muted"></i>
+                        <div class="d-flex gap-2 align-items-center">
+                            <i class="bi bi-trash text-muted cursor-pointer" id="clearPreviewBtn" title="Clear Chat" style="cursor:pointer"></i>
+                            <i class="bi bi-three-dots text-muted"></i>
+                        </div>
                     </div>
                     <div id="messages" class="chat-messages">
                         <!-- Preview messages -->
@@ -620,13 +623,20 @@
                 if(e.key === 'Enter') sendMessage();
             });
         
-            // --- Voice Logic (HF MMS) ---
-            const micBtn = document.getElementById('micBtn');
-            let mediaRecorder;
-            let audioChunks = [];
-        
-            micBtn.addEventListener('click', async () => {
-                if (micBtn.classList.contains('listening')) {
+                // --- Voice Logic (HF MMS) ---
+                const micBtn = document.getElementById('micBtn');
+                const clearPreviewBtn = document.getElementById('clearPreviewBtn');
+                let mediaRecorder;
+                let audioChunks = [];
+            
+                clearPreviewBtn.addEventListener('click', () => {
+                    if (confirm("Clear preview chat?")) {
+                        document.getElementById('messages').innerHTML = '';
+                        addMsg(document.getElementById('welcomeMsg').value || "Hello!", 'assistant');
+                    }
+                });
+            
+                micBtn.addEventListener('click', async () => {                if (micBtn.classList.contains('listening')) {
                     mediaRecorder.stop();
                     micBtn.classList.remove('listening');
                 } else {
