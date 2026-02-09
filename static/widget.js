@@ -1,6 +1,23 @@
 (function() {
   const CLIENT_KEY = window.__LUCY_CLIENT_KEY__ || "dev-client-key";
-  const BASE_URL = window.location.origin;
+  
+  // Intelligently detect the BASE_URL from the script's own src
+  const scriptTag = document.currentScript || (function() {
+    const scripts = document.getElementsByTagName('script');
+    return scripts[scripts.length - 1];
+  })();
+  
+  const scriptSrc = scriptTag ? scriptTag.src : "";
+  let BASE_URL = "";
+  
+  if (scriptSrc.startsWith('http')) {
+    const url = new URL(scriptSrc);
+    BASE_URL = `${url.protocol}//${url.host}`;
+  } else {
+    // Fallback for local file testing if the script isn't loaded via http
+    BASE_URL = "http://localhost:5000";
+  }
+
   const API_URL = `${BASE_URL}/api/support`;
   const CONFIG_URL = `${BASE_URL}/api/widget-config?key=${CLIENT_KEY}`;
 
