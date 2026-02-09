@@ -19,7 +19,7 @@
   }
 
   const API_URL = `${BASE_URL}/api/support`;
-  const CONFIG_URL = `${BASE_URL}/api/widget-config?key=${CLIENT_KEY}`;
+  const CONFIG_URL = `${BASE_URL}/api/widget-config?key=${CLIENT_KEY}&cb=${Date.now()}`;
 
   let config = {
     bot_name: "Lucy AI",
@@ -70,6 +70,7 @@
       #lucy-chat-window.active { display: flex; }
 
       .lucy-header { background: ${config.theme_color}; color: white; padding: 18px; font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
+      .lucy-header-btns { display: flex; gap: 10px; align-items: center; }
       .lucy-messages { flex: 1; overflow-y: auto; padding: 20px; background: #f8fafc; display: flex; flex-direction: column; gap: 12px; }
       .lucy-msg { padding: 10px 14px; border-radius: 14px; font-size: 14px; max-width: 85%; line-height: 1.5; }
       .lucy-msg.user { background: ${config.user_msg_color}; color: white; align-self: flex-end; border-bottom-right-radius: 2px; }
@@ -94,7 +95,12 @@
       <div id="lucy-chat-window">
         <div class="lucy-header">
           <span>${config.bot_name}</span>
-          <span style="cursor:pointer; font-size: 20px;" id="lucy-close">&times;</span>
+          <div class="lucy-header-btns">
+            <span style="cursor:pointer; display: flex;" id="lucy-clear" title="Clear History">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+            </span>
+            <span style="cursor:pointer; font-size: 24px; line-height: 1;" id="lucy-close">&times;</span>
+          </div>
         </div>
         <div id="lucy-messages" class="lucy-messages"></div>
         <div class="lucy-footer">
@@ -126,6 +132,7 @@
     const inputEl = document.getElementById('lucy-input');
     const sendBtn = document.getElementById('lucy-send');
     const micBtn = document.getElementById('lucy-mic');
+    const clearBtn = document.getElementById('lucy-clear');
 
     bubble.addEventListener('click', () => {
       windowEl.classList.toggle('active');
@@ -135,6 +142,15 @@
     closeBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       windowEl.classList.remove('active');
+    });
+
+    clearBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (confirm("Are you sure you want to clear your chat history?")) {
+        localStorage.removeItem('lucy_chat_history');
+        document.getElementById('lucy-messages').innerHTML = '';
+        loadHistoryAndWelcome();
+      }
     });
 
     sendBtn.addEventListener('click', () => sendMessage());

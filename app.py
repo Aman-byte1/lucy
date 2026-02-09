@@ -129,8 +129,11 @@ def require_client_key(f):
     def wrapped(*args, **kwargs):
         key = request.headers.get("X-API-KEY")
         config = load_config()
+        expected = config.get("client_api_key", CLIENT_API_KEY)
         if key == "dashboard-demo-key": return f(*args, **kwargs)
-        if not key or key != config.get("client_api_key", CLIENT_API_KEY): return jsonify({"error": "Unauthorized"}), 401
+        if not key or key != expected:
+            print(f"Lucy AI Auth Failure: Received '{key}', Expected '{expected}'")
+            return jsonify({"error": "Unauthorized"}), 401
         return f(*args, **kwargs)
     return wrapped
 
