@@ -274,48 +274,103 @@ def support():
     
     return jsonify(result)
 
-@app.route("/api/fetch-url", methods=["POST"])
+from urllib.parse import urljoin, urlparse
+
+@app.route("/api/scan-site", methods=["POST"])
 @login_required
-def fetch_url():
+def scan_site():
     data = request.json
-    url = data.get("url")
-    if not url: return jsonify({"error": "URL required"}), 400
+    start_url = data.get("url")
+    if not start_url: return jsonify({"error": "URL required"}), 400
+    
+    if not start_url.startswith(("http://", "https://")):
+        start_url = "https://" + start_url
+        
+    domain = urlparse(start_url).netloc
     
     try:
-        if not url.startswith(("http://", "https://")):
-            url = "https://" + url
-            
-        headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"}
-        response = requests.get(url, headers=headers, timeout=10, verify=False)
+        session = requests.Session()
+        session.verify = False
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+            "Accept-Language": "en-US,en;q=0.5",
+            "Connection": "keep-alive"
+        }
+        
+        response = session.get(start_url, headers=headers, timeout=15)
         response.raise_for_status()
         
         soup = BeautifulSoup(response.text, 'html.parser')
+        links = set()
+        links.add(start_url) # Always include the start page
         
-        # Remove unwanted elements
-        for element in soup(["script", "style", "nav", "footer", "header"]):
-            element.extract()
+        # Find all internal links
+        for a in soup.find_all('a', href=True):
+            href = a['href']
+            full_url = urljoin(start_url, href)
+            parsed = urlparse(full_url)
             
-        # Try to find the main content area first
-        content_area = soup.find('main') or soup.find('article') or soup.find('div', {'id': 'content'}) or soup.find('div', {'class': 'content'})
+            # Filter for internal links only and valid schemes
+            if parsed.netloc == domain and parsed.scheme in ['http', 'https']:
+                # Exclude non-content links
+                if not any(ext in parsed.path.lower() for ext in ['.jpg', '.png', '.pdf', '.zip']):
+                    links.add(full_url)
         
-        if content_area:
-            text = content_area.get_text(separator='\n')
-        else:
-            text = soup.get_text(separator='\n')
-            
-        # Cleaning: Remove extra whitespace but preserve lines
-        lines = [line.strip() for line in text.splitlines() if line.strip()]
-        clean_text = '\n'.join(lines)
+        # Limit to top 20 links to avoid overwhelming the user
+        sorted_links = sorted(list(links))[:20]
+        return jsonify({"links": sorted_links})
         
-        # If still too short, fall back to getting all visible text
-        if len(clean_text) < 200:
-            all_text = soup.get_text(separator='\n')
-            lines = [line.strip() for line in all_text.splitlines() if line.strip()]
-            clean_text = '\n'.join(lines)
-            
-        return jsonify({"url": url, "text": clean_text})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+@app.route("/api/scrape-pages", methods=["POST"])
+@login_required
+def scrape_pages():
+    data = request.json
+    urls = data.get("urls", [])
+    if not urls: return jsonify({"error": "No URLs provided"}), 400
+    
+    combined_text = ""
+    session = requests.Session()
+    session.verify = False
+    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
+
+    success_count = 0
+    
+    for url in urls:
+        try:
+            resp = session.get(url, headers=headers, timeout=10)
+            soup = BeautifulSoup(resp.text, 'html.parser')
+            
+            # Cleanup
+            for el in soup(["script", "style", "nav", "footer", "header", "noscript"]):
+                el.extract()
+            
+            # Smart extraction
+            content = soup.find('main') or soup.find('article') or soup.find('div', class_='content') or soup.body
+            text = content.get_text(separator='\n') if content else ""
+            
+            # Formatting
+            clean_lines = [line.strip() for line in text.splitlines() if line.strip()]
+            if clean_lines:
+                combined_text += f"\n\n--- Source: {url} ---\n"
+                combined_text += "\n".join(clean_lines)
+                success_count += 1
+                
+        except Exception:
+            continue # Skip failed pages
+            
+    if success_count == 0:
+        return jsonify({"error": "Failed to scrape any pages"}), 500
+        
+    return jsonify({"text": combined_text, "count": success_count})
+
+@app.route("/api/fetch-url", methods=["POST"])
+@login_required
+def fetch_url():
+    # Deprecated but kept for compatibility
+    return scan_site()
 
 @app.route("/api/asr", methods=["POST"])
 def asr():

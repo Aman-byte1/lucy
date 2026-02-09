@@ -172,10 +172,22 @@
                         <div class="card-header">Website Import</div>
                         <div class="card-body">
                             <div class="input-group mb-3">
-                                <input type="text" id="fetchUrl" class="form-control" placeholder="https://example.com">
-                                <button class="btn btn-primary" id="fetchBtn" onclick="fetchWebsite()">Fetch Content</button>
+                                <input type="text" id="scanUrl" class="form-control" placeholder="https://example.com">
+                                <button class="btn btn-primary" id="scanBtn" onclick="scanWebsite()">Scan Site</button>
                             </div>
-                            <small class="text-muted"><i class="bi bi-link-45deg"></i> Scrape text content from any public website.</small>
+                            
+                            <!-- Link Selection Area -->
+                            <div id="linkSelectionArea" class="d-none border rounded p-3 mb-3 bg-light">
+                                <label class="form-label fw-bold mb-2">Found Pages (Select to Import)</label>
+                                <div id="linksList" class="mb-3" style="max-height: 200px; overflow-y: auto;">
+                                    <!-- Checkboxes will go here -->
+                                </div>
+                                <button class="btn btn-success w-100" id="importLinksBtn" onclick="importSelectedLinks()">
+                                    <i class="bi bi-download me-2"></i>Import Selected Content
+                                </button>
+                            </div>
+                            
+                            <small class="text-muted"><i class="bi bi-link-45deg"></i> Crawl website and select pages to train Lucy on.</small>
                         </div>
                     </div>
 
@@ -340,23 +352,24 @@
     const API_SUPPORT = "/api/support";
     const API_UPLOAD = "/api/upload";
     const API_ACTIVITY = "/api/activity";
-    const API_FETCH_URL = "/api/fetch-url";
+    const API_SCAN = "/api/scan-site";
+    const API_SCRAPE = "/api/scrape-pages";
     
     let currentConfig = {};
 
-    // --- Config Logic ---
-    async function fetchWebsite() {
-        const urlInput = document.getElementById('fetchUrl');
+    // --- Website Logic ---
+    async function scanWebsite() {
+        const urlInput = document.getElementById('scanUrl');
         const url = urlInput.value.trim();
         if (!url) return;
         
-        const btn = document.getElementById('fetchBtn');
+        const btn = document.getElementById('scanBtn');
         const oldText = btn.innerText;
-        btn.innerText = "Fetching...";
+        btn.innerText = "Scanning...";
         btn.disabled = true;
         
         try {
-            const res = await fetch(API_FETCH_URL, {
+            const res = await fetch(API_SCAN, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ url: url })
@@ -364,14 +377,61 @@
             const data = await res.json();
             if (data.error) throw new Error(data.error);
             
-            const kb = document.getElementById('kbText');
-            kb.value = (kb.value + "\n\n" + `--- Website: ${data.url} ---\n` + data.text).trim();
-            showToast("Website content fetched successfully!");
-            urlInput.value = "";
+            // Show selection UI
+            const list = document.getElementById('linksList');
+            list.innerHTML = data.links.map((link, i) => `
+                <div class="form-check text-truncate">
+                    <input class="form-check-input" type="checkbox" value="${link}" id="lnk${i}" checked>
+                    <label class="form-check-label" for="lnk${i}" title="${link}">
+                        ${link}
+                    </label>
+                </div>
+            `).join('');
+            
+            document.getElementById('linkSelectionArea').classList.remove('d-none');
+            showToast(`Found ${data.links.length} pages!`);
+            
         } catch (e) {
-            alert("Fetch failed: " + e.message);
+            alert("Scan failed: " + e.message);
         } finally {
             btn.innerText = oldText;
+            btn.disabled = false;
+        }
+    }
+
+    async function importSelectedLinks() {
+        const checkboxes = document.querySelectorAll('#linksList input:checked');
+        if (checkboxes.length === 0) {
+            alert("Please select at least one page.");
+            return;
+        }
+        
+        const urls = Array.from(checkboxes).map(cb => cb.value);
+        const btn = document.getElementById('importLinksBtn');
+        const oldText = btn.innerHTML;
+        btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>Importing ${urls.length} pages...`;
+        btn.disabled = true;
+        
+        try {
+            const res = await fetch(API_SCRAPE, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ urls: urls })
+            });
+            const data = await res.json();
+            if (data.error) throw new Error(data.error);
+            
+            const kb = document.getElementById('kbText');
+            kb.value = (kb.value + "\n" + data.text).trim();
+            
+            document.getElementById('linkSelectionArea').classList.add('d-none');
+            document.getElementById('scanUrl').value = "";
+            showToast(`Successfully imported ${data.count} pages!`);
+            
+        } catch (e) {
+            alert("Import failed: " + e.message);
+        } finally {
+            btn.innerHTML = oldText;
             btn.disabled = false;
         }
     }
