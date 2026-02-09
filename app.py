@@ -9,8 +9,11 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_cors import CORS
 import pypdf
 import requests
-
+import urllib3
 from bs4 import BeautifulSoup
+
+# Suppress insecure request warnings for SSL verification disabled
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 load_dotenv()
 
@@ -283,7 +286,7 @@ def fetch_url():
             url = "https://" + url
             
         headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"}
-        response = requests.get(url, headers=headers, timeout=10)
+        response = requests.get(url, headers=headers, timeout=10, verify=False)
         response.raise_for_status()
         
         soup = BeautifulSoup(response.text, 'html.parser')
