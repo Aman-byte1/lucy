@@ -8,6 +8,7 @@ from flask import Flask, request, jsonify, render_template, abort, session, redi
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_cors import CORS
 import pypdf
+import requests
 
 from bs4 import BeautifulSoup
 
