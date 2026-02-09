@@ -291,18 +291,28 @@ def fetch_url():
         
         soup = BeautifulSoup(response.text, 'html.parser')
         
-        # Remove script and style elements
-        for script in soup(["script", "style"]):
-            script.extract()
+        # Remove unwanted elements
+        for element in soup(["script", "style", "nav", "footer", "header"]):
+            element.extract()
             
-        text = soup.get_text(separator='\n')
-        # Break into lines and remove leading and trailing whitespace
-        lines = (line.strip() for line in text.splitlines())
-        # Break multi-headlines into a line each
-        chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
-        # Drop blank lines
-        clean_text = '\n'.join(chunk for chunk in chunks if chunk)
+        # Try to find the main content area first
+        content_area = soup.find('main') or soup.find('article') or soup.find('div', {'id': 'content'}) or soup.find('div', {'class': 'content'})
         
+        if content_area:
+            text = content_area.get_text(separator='\n')
+        else:
+            text = soup.get_text(separator='\n')
+            
+        # Cleaning: Remove extra whitespace but preserve lines
+        lines = [line.strip() for line in text.splitlines() if line.strip()]
+        clean_text = '\n'.join(lines)
+        
+        # If still too short, fall back to getting all visible text
+        if len(clean_text) < 200:
+            all_text = soup.get_text(separator='\n')
+            lines = [line.strip() for line in all_text.splitlines() if line.strip()]
+            clean_text = '\n'.join(lines)
+            
         return jsonify({"url": url, "text": clean_text})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
