@@ -1,15 +1,15 @@
-(function() {
+(function () {
   const CLIENT_KEY = window.__LUCY_CLIENT_KEY__ || "dev-client-key";
-  
+
   // Intelligently detect the BASE_URL from the script's own src
-  const scriptTag = document.currentScript || (function() {
+  const scriptTag = document.currentScript || (function () {
     const scripts = document.getElementsByTagName('script');
     return scripts[scripts.length - 1];
   })();
-  
+
   const scriptSrc = scriptTag ? scriptTag.src : "";
   let BASE_URL = "";
-  
+
   if (scriptSrc.startsWith('http')) {
     const url = new URL(scriptSrc);
     BASE_URL = `${url.protocol}//${url.host}`;
@@ -23,10 +23,10 @@
 
   let config = {
     bot_name: "Lucy AI",
-    theme_color: "#4F46E5",
-    user_msg_color: "#4F46E5",
+    theme_color: "#0066CC",
+    user_msg_color: "#0066CC",
     bot_msg_color: "#ffffff",
-    send_btn_color: "#4F46E5",
+    send_btn_color: "#0066CC",
     welcome_message: "Hello! How can I help you today?"
   };
 
@@ -35,7 +35,7 @@
       const res = await fetch(CONFIG_URL);
       const data = await res.json();
       config = { ...config, ...data };
-    } catch(e) { console.error("Lucy AI: Failed to load config", e); }
+    } catch (e) { console.error("Lucy AI: Failed to load config", e); }
 
     renderWidget();
   }
@@ -136,7 +136,7 @@
 
     bubble.addEventListener('click', () => {
       windowEl.classList.toggle('active');
-      if(windowEl.classList.contains('active')) inputEl.focus();
+      if (windowEl.classList.contains('active')) inputEl.focus();
     });
 
     closeBtn.addEventListener('click', (e) => {
@@ -154,8 +154,8 @@
     });
 
     sendBtn.addEventListener('click', () => sendMessage());
-    inputEl.addEventListener('keydown', (e) => { if(e.key === 'Enter') sendMessage(); });
-    
+    inputEl.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendMessage(); });
+
     // Voice Logic (using MediaRecorder for HF MMS ASR)
     let mediaRecorder;
     let audioChunks = [];
@@ -177,7 +177,7 @@
           mediaRecorder.onstop = async () => {
             const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
             micBtn.classList.add('processing');
-            
+
             try {
               const res = await fetch(`${BASE_URL}/api/asr?lang=amh`, {
                 method: 'POST',
@@ -217,7 +217,7 @@
 
   function loadHistoryAndWelcome() {
     const history = getHistory();
-    if(history.length > 0) {
+    if (history.length > 0) {
       history.forEach(m => appendMsg(m.content, m.role));
     } else {
       appendMsg(config.welcome_message, 'assistant');
@@ -225,8 +225,8 @@
   }
 
   function getHistory() {
-    try { return JSON.parse(localStorage.getItem('lucy_chat_history') || "[]"); } 
-    catch(e) { return []; }
+    try { return JSON.parse(localStorage.getItem('lucy_chat_history') || "[]"); }
+    catch (e) { return []; }
   }
 
   function saveHistory(history) {
@@ -245,8 +245,8 @@
   async function sendMessage(enableTTS = false) {
     const inputEl = document.getElementById('lucy-input');
     const text = inputEl.value.trim();
-    if(!text) return;
-    
+    if (!text) return;
+
     appendMsg(text, 'user');
     inputEl.value = '';
 
@@ -257,22 +257,22 @@
       const res = await fetch(API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-API-KEY': CLIENT_KEY },
-        body: JSON.stringify({ 
-          user_query: text, 
+        body: JSON.stringify({
+          user_query: text,
           context: context,
           language: 'am', // Default to Amharic
-          sector: 'admin_defined' 
+          sector: 'admin_defined'
         })
       });
       const data = await res.json();
       appendMsg(data.reply, 'assistant');
-      
-      if(enableTTS) speakText(data.reply);
 
-      history.push({role: 'user', content: text});
-      history.push({role: 'assistant', content: data.reply});
+      if (enableTTS) speakText(data.reply);
+
+      history.push({ role: 'user', content: text });
+      history.push({ role: 'assistant', content: data.reply });
       saveHistory(history);
-    } catch(e) {
+    } catch (e) {
       appendMsg("Sorry, I'm having trouble connecting.", 'assistant');
     }
   }
