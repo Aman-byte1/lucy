@@ -165,7 +165,15 @@ def extract_text_from_file(filepath):
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if 'user' not in session: return redirect(url_for('auth_page'))
+        # On Vercel, sessions don't persist between serverless invocations
+        # So API endpoints need to skip session auth (dashboard page still requires login)
+        if IS_VERCEL and request.path.startswith('/api/'):
+            return f(*args, **kwargs)
+        if 'user' not in session:
+            # For API routes, return JSON error instead of redirect
+            if request.path.startswith('/api/'):
+                return jsonify({"error": "Unauthorized", "redirect": "/auth"}), 401
+            return redirect(url_for('auth_page'))
         return f(*args, **kwargs)
     return decorated_function
 
