@@ -1,0 +1,47 @@
+{
+  "CLT001": {
+    "name": "Abebe Balcha",
+    "email": "abebe@example.com",
+    "phone": "+251911234567",
+    "service": "Healthcare - Diabetes Management",
+    "status": "active",
+    "notes": "Regular checkup patient. Prefers Amharic.",
+    "created_at": "2025-12-01"
+  },
+  "CLT002": {
+    "name": "Chala Guteta",
+    "email": "chala@example.com",
+    "phone": "+251922345678",
+    "service": "Healthcare - Respiratory Care",
+    "status": "active",
+    "notes": "Follow-up treatment in progress. Speaks Oromo.",
+    "created_at": "2026-01-10"
+  },
+  "CLT003": {
+    "name": "Muna Ahmed",
+    "email": "muna@example.com",
+    "phone": "+251933456789",
+    "service": "Healthcare - Prenatal",
+    "status": "active",
+    "notes": "Prenatal care program. Speaks Somali and Amharic.",
+    "created_at": "2026-01-15"
+  },
+  "CLT004": {
+    "name": "Sara Solomon",
+    "email": "sara@example.com",
+    "phone": "+251944567890",
+    "service": "Healthcare - Cardiology",
+    "status": "pending",
+    "notes": "Awaiting initial consultation. Speaks Tigrinya.",
+    "created_at": "2026-02-01"
+  },
+  "CLT005": {
+    "name": "Dawit Tadesse",
+    "email": "dawit@example.com",
+    "phone": "+251955678901",
+    "service": "Banking - Account Support",
+    "status": "active",
+    "notes": "Premium banking client. Prefers English.",
+    "created_at": "2025-11-20"
+  }
+}

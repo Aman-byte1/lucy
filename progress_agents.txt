@@ -36,4 +36,8 @@ Recent Updates:
 - Updated Chat Widget and Dashboard Preview to use server-side ASR/TTS instead of browser-native.
 - Secured HF API Token in .env.
 - Upgraded default model to gemini-2.0-flash (reverted to 1.5-flash-latest for quota, then to gemini-3-flash-preview as requested).
+- Implemented Appointment & Medication Lookup feature:
+  - Created `appointments.json` data store.
+  - Updated `app.py` to inject appointment data into Gemini's context.
+  - Configured prompt to handle Name and ID verification for secure access to medical/appointment info.
 

@@ -1,711 +1,440 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Lucy AI | Dashboard</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <style>
-        :root { 
-            --primary-color: #4F46E5; 
-            --bg-color: #f8fafc; 
-            --sidebar-width: 280px;
-            --text-main: #1e293b;
-            --text-muted: #64748b;
-        }
-        body { font-family: 'Inter', sans-serif; background-color: var(--bg-color); height: 100vh; overflow: hidden; color: var(--text-main); }
-        
-        /* Layout */
-        .wrapper { display: flex; height: 100vh; }
-        
+        :root{--p:#6C5CE7;--p2:#a29bfe;--bg:#0f0f1a;--card:#1a1a2e;--card2:#16213e;--border:#2a2a4a;--text:#e2e8f0;--muted:#8892b0;--green:#00cec9;--red:#ff6b6b;--yellow:#feca57;--blue:#54a0ff;}
+        *{box-sizing:border-box;margin:0;padding:0;}
+        body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);height:100vh;overflow:hidden;}
+        .wrapper{display:flex;height:100vh;}
         /* Sidebar */
-        .sidebar { 
-            width: var(--sidebar-width); 
-            background: white; 
-            border-right: 1px solid #e2e8f0; 
-            display: flex; 
-            flex-direction: column; 
-            padding: 24px;
-            z-index: 10;
-        }
-        .brand { font-weight: 700; font-size: 1.25rem; color: var(--primary-color); display: flex; align-items: center; gap: 10px; margin-bottom: 40px; }
-        .nav-item { margin-bottom: 4px; }
-        .nav-link { 
-            color: var(--text-muted); 
-            font-weight: 500; 
-            padding: 12px 16px; 
-            border-radius: 8px; 
-            display: flex; 
-            align-items: center; 
-            gap: 12px; 
-            transition: all 0.2s; 
-        }
-        .nav-link:hover { background: #f1f5f9; color: var(--text-main); }
-        .nav-link.active { background: #e0e7ff; color: var(--primary-color); }
-        .nav-link i { font-size: 1.1rem; }
-
-        /* Main Content */
-        .main-content { flex: 1; overflow-y: auto; padding: 40px; display: flex; gap: 40px; justify-content: center; }
-        .config-area { width: 100%; max-width: 600px; }
-        .preview-area { width: 100%; max-width: 400px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: sticky; top: 40px; height: fit-content; }
-
+        .sidebar{width:260px;background:linear-gradient(180deg,#1a1a2e 0%,#16213e 100%);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:20px 16px;flex-shrink:0;}
+        .brand{font-weight:700;font-size:1.2rem;color:var(--p2);display:flex;align-items:center;gap:10px;margin-bottom:32px;padding:0 8px;}
+        .brand i{font-size:1.4rem;background:var(--p);color:#fff;padding:8px;border-radius:10px;}
+        .nav-link{color:var(--muted);font-weight:500;padding:10px 14px;border-radius:10px;display:flex;align-items:center;gap:10px;transition:all .2s;font-size:.9rem;margin-bottom:2px;cursor:pointer;text-decoration:none;}
+        .nav-link:hover{background:rgba(108,92,231,.1);color:var(--p2);}
+        .nav-link.active{background:rgba(108,92,231,.15);color:var(--p2);border-left:3px solid var(--p);}
+        .nav-link i{font-size:1.1rem;width:20px;text-align:center;}
+        .sidebar-footer{margin-top:auto;padding-top:16px;border-top:1px solid var(--border);}
+        /* Main */
+        .main-content{flex:1;overflow-y:auto;padding:32px;display:flex;gap:32px;}
+        .config-area{flex:1;max-width:700px;}
+        .preview-area{width:380px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;position:sticky;top:0;padding-top:20px;}
+        /* Cards */
+        .card{background:var(--card);border:1px solid var(--border);border-radius:14px;margin-bottom:20px;backdrop-filter:blur(10px);}
+        .card-header{background:transparent;border-bottom:1px solid var(--border);padding:16px 20px;font-weight:600;color:var(--text);font-size:.95rem;}
+        .card-body{padding:20px;}
         /* Forms */
-        .card { border: none; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); margin-bottom: 24px; background: white; }
-        .card-header { background: white; border-bottom: 1px solid #f1f5f9; padding: 20px 24px; font-weight: 600; border-radius: 16px 16px 0 0; }
-        .card-body { padding: 24px; }
-        
-        .form-label { font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 6px; }
-        .form-control, .form-select { 
-            border-radius: 8px; 
-            border: 1px solid #cbd5e1; 
-            padding: 10px 14px; 
-            font-size: 0.95rem; 
-            transition: border 0.2s;
-        }
-        .form-control:focus { border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); }
-        textarea.form-control { font-family: 'Menlo', monospace; font-size: 0.85rem; background: #f8fafc; }
-
+        .form-label{font-size:.8rem;font-weight:600;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px;}
+        .form-control,.form-select{background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 14px;font-size:.9rem;}
+        .form-control:focus{border-color:var(--p);box-shadow:0 0 0 3px rgba(108,92,231,.15);background:var(--bg);color:var(--text);}
+        textarea.form-control{font-family:'JetBrains Mono',monospace;font-size:.82rem;}
+        .form-range::-webkit-slider-thumb{background:var(--p);}
+        /* Buttons */
+        .btn-primary{background:var(--p);border:none;font-weight:600;border-radius:8px;transition:all .2s;}
+        .btn-primary:hover{background:#5a4bd1;transform:translateY(-1px);box-shadow:0 8px 20px rgba(108,92,231,.3);}
+        .btn-outline-primary{color:var(--p2);border-color:var(--border);}
+        .btn-outline-primary:hover{background:var(--p);border-color:var(--p);}
+        .btn-outline-danger{color:var(--red);border-color:var(--border);}
+        .btn-outline-danger:hover{background:var(--red);border-color:var(--red);color:#fff;}
+        .btn-outline-secondary{color:var(--muted);border-color:var(--border);}
+        .btn-outline-secondary:hover{background:var(--border);color:var(--text);border-color:var(--border);}
+        .btn-success{background:var(--green);border:none;color:#0f0f1a;font-weight:600;}
         /* Phone Preview */
-        .phone-frame {
-            width: 360px;
-            height: 700px;
-            background: #fff;
-            border-radius: 40px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-            border: 8px solid #1e293b;
-            position: relative;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-        }
-        .phone-notch {
-            position: absolute; top: 0; left: 50%; transform: translateX(-50%);
-            width: 120px; height: 24px; background: #1e293b;
-            border-radius: 0 0 16px 16px; z-index: 20;
-        }
-        .chat-app { flex: 1; display: flex; flex-direction: column; background: #f8fafc; overflow: hidden; margin-top: 24px; }
-        .chat-header { padding: 16px; background: white; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; }
-        .chat-messages { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
-        
-        .msg { padding: 10px 14px; border-radius: 14px; font-size: 0.9rem; line-height: 1.4; max-width: 80%; }
-        .msg.user { background: var(--primary-color); color: white; align-self: flex-end; border-bottom-right-radius: 2px; }
-        .msg.assistant { background: white; color: #1e293b; align-self: flex-start; border-bottom-left-radius: 2px; border: 1px solid #e2e8f0; }
-        
-        .chat-input { padding: 12px; background: white; border-top: 1px solid #e2e8f0; display: flex; gap: 8px; align-items: center; }
-        .mic-btn { background: transparent; color: #64748b; border: 1px solid #e2e8f0; border-radius: 50%; width: 38px; height: 38px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
-        .mic-btn.listening { background: #ef4444; color: white; border-color: #ef4444; animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
-        
+        .phone-frame{width:340px;height:660px;background:#fff;border-radius:36px;box-shadow:0 25px 60px rgba(0,0,0,.5);border:6px solid #2a2a4a;position:relative;overflow:hidden;display:flex;flex-direction:column;}
+        .phone-notch{position:absolute;top:0;left:50%;transform:translateX(-50%);width:100px;height:22px;background:#2a2a4a;border-radius:0 0 14px 14px;z-index:20;}
+        .chat-app{flex:1;display:flex;flex-direction:column;background:#f8fafc;overflow:hidden;margin-top:22px;}
+        .chat-header{padding:14px;background:#fff;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;}
+        .chat-messages{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;}
+        .msg{padding:10px 13px;border-radius:14px;font-size:.85rem;line-height:1.4;max-width:80%;word-wrap:break-word;}
+        .msg.user{background:var(--p);color:#fff;align-self:flex-end;border-bottom-right-radius:2px;}
+        .msg.assistant{background:#fff;color:#1e293b;align-self:flex-start;border-bottom-left-radius:2px;border:1px solid #e2e8f0;}
+        .chat-input{padding:10px;background:#fff;border-top:1px solid #e2e8f0;display:flex;gap:8px;align-items:center;}
+        .chat-input input{flex:1;border:none;background:#f1f5f9;border-radius:20px;padding:8px 14px;font-size:.85rem;color:#1e293b;outline:none;}
+        .mic-btn{background:transparent;color:#64748b;border:1px solid #e2e8f0;border-radius:50%;width:34px;height:34px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+        .mic-btn.listening{background:#ef4444;color:#fff;border-color:#ef4444;animation:pulse 1.5s infinite;}
+        @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(239,68,68,.4)}70%{box-shadow:0 0 0 10px rgba(239,68,68,0)}100%{box-shadow:0 0 0 0 rgba(239,68,68,0)}}
+        /* Stats */
+        .stat-card{background:linear-gradient(135deg,var(--card) 0%,var(--card2) 100%);border:1px solid var(--border);border-radius:14px;padding:20px;position:relative;overflow:hidden;}
+        .stat-card .stat-icon{position:absolute;top:12px;right:16px;font-size:2rem;opacity:.15;color:var(--p2);}
+        .stat-card h2{font-size:1.8rem;font-weight:700;margin:0;}
+        .stat-card small{color:var(--muted);font-size:.75rem;text-transform:uppercase;letter-spacing:.5px;}
+        /* Tables */
+        .table{color:var(--text);font-size:.88rem;}
+        .table thead th{border-color:var(--border);color:var(--muted);font-weight:600;font-size:.78rem;text-transform:uppercase;letter-spacing:.5px;padding:10px 14px;}
+        .table tbody td{border-color:var(--border);padding:12px 14px;vertical-align:middle;}
+        .table-hover tbody tr:hover{background:rgba(108,92,231,.05);color:var(--text);}
+        /* Badges */
+        .badge-active{background:rgba(0,206,201,.15);color:var(--green);padding:4px 10px;border-radius:6px;font-size:.75rem;font-weight:600;}
+        .badge-pending{background:rgba(254,202,87,.15);color:var(--yellow);padding:4px 10px;border-radius:6px;font-size:.75rem;font-weight:600;}
+        .badge-inactive{background:rgba(255,107,107,.15);color:var(--red);padding:4px 10px;border-radius:6px;font-size:.75rem;font-weight:600;}
+        .badge-scheduled{background:rgba(84,160,255,.15);color:var(--blue);padding:4px 10px;border-radius:6px;font-size:.75rem;font-weight:600;}
+        .badge-completed{background:rgba(0,206,201,.15);color:var(--green);padding:4px 10px;border-radius:6px;font-size:.75rem;font-weight:600;}
+        .badge-cancelled{background:rgba(255,107,107,.15);color:var(--red);padding:4px 10px;border-radius:6px;font-size:.75rem;font-weight:600;}
         /* Toast */
-        .toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 100; }
-        
-        /* Activity Log */
-        .log-item { padding: 12px 0; border-bottom: 1px solid #f1f5f9; }
-        .log-item:last-child { border-bottom: none; }
-        .log-query { font-weight: 500; font-size: 0.9rem; margin-bottom: 4px; }
-        .log-meta { font-size: 0.75rem; color: #94a3b8; }
-        
-        /* Upload Box */
-        .upload-box { 
-            border: 2px dashed #cbd5e1; border-radius: 12px; padding: 24px; 
-            text-align: center; cursor: pointer; transition: all 0.2s; background: #f8fafc;
-        }
-        .upload-box:hover { border-color: var(--primary-color); background: #e0e7ff; }
+        .toast-container{position:fixed;bottom:24px;right:24px;z-index:100;}
+        /* Conversation */
+        .convo-item{padding:14px;border-bottom:1px solid var(--border);transition:background .2s;cursor:default;}
+        .convo-item:hover{background:rgba(108,92,231,.05);}
+        .convo-item:last-child{border-bottom:none;}
+        .convo-q{font-weight:500;font-size:.88rem;color:var(--text);margin-bottom:4px;}
+        .convo-a{font-size:.82rem;color:var(--muted);margin-bottom:6px;max-height:40px;overflow:hidden;text-overflow:ellipsis;}
+        .convo-meta{font-size:.72rem;color:var(--muted);}
+        /* Log */
+        .log-item{padding:12px 0;border-bottom:1px solid var(--border);}
+        .log-item:last-child{border-bottom:none;}
+        .log-query{font-weight:500;font-size:.88rem;margin-bottom:4px;}
+        .log-meta{font-size:.75rem;color:var(--muted);}
+        /* Upload */
+        .upload-box{border:2px dashed var(--border);border-radius:12px;padding:24px;text-align:center;cursor:pointer;transition:all .2s;background:var(--bg);}
+        .upload-box:hover{border-color:var(--p);background:rgba(108,92,231,.05);}
+        /* Modal */
+        .modal-content{background:var(--card);border:1px solid var(--border);color:var(--text);}
+        .modal-header{border-bottom:1px solid var(--border);}
+        .modal-footer{border-top:1px solid var(--border);}
+        .btn-close{filter:invert(1);}
+        /* Scrollbar */
+        ::-webkit-scrollbar{width:6px;}
+        ::-webkit-scrollbar-track{background:var(--bg);}
+        ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+        ::-webkit-scrollbar-thumb:hover{background:var(--muted);}
+        /* Section Title */
+        .section-title{font-size:1.4rem;font-weight:700;margin-bottom:24px;display:flex;align-items:center;gap:10px;}
+        .section-title i{color:var(--p2);}
+        @media(max-width:1200px){.preview-area{display:none !important;}}
     </style>
 </head>
 <body>
-
 <div class="wrapper">
-    <!-- Sidebar -->
     <aside class="sidebar">
         <div class="brand"><i class="bi bi-robot"></i> Lucy AI</div>
-        
-        <nav class="nav flex-column nav-pills" role="tablist">
-            <a class="nav-link active" data-bs-toggle="pill" href="#tab-knowledge">
-                <i class="bi bi-book"></i> Knowledge Base
-            </a>
-            <a class="nav-link" data-bs-toggle="pill" href="#tab-settings">
-                <i class="bi bi-sliders"></i> Settings
-            </a>
-            <a class="nav-link" data-bs-toggle="pill" href="#tab-activity" onclick="loadActivity()">
-                <i class="bi bi-activity"></i> Activity
-            </a>
-            <a class="nav-link" data-bs-toggle="pill" href="#tab-embed">
-                <i class="bi bi-code-slash"></i> Integration
-            </a>
+        <nav class="nav flex-column" role="tablist">
+            <a class="nav-link active" data-bs-toggle="pill" href="#tab-knowledge"><i class="bi bi-book"></i> Knowledge Base</a>
+            <a class="nav-link" data-bs-toggle="pill" href="#tab-clients" onclick="loadClients()"><i class="bi bi-people"></i> Clients</a>
+            <a class="nav-link" data-bs-toggle="pill" href="#tab-appointments" onclick="loadAppointments()"><i class="bi bi-calendar-check"></i> Appointments</a>
+            <a class="nav-link" data-bs-toggle="pill" href="#tab-conversations" onclick="loadConversations()"><i class="bi bi-chat-dots"></i> Conversations</a>
+            <a class="nav-link" data-bs-toggle="pill" href="#tab-analytics" onclick="loadAnalytics()"><i class="bi bi-graph-up"></i> Analytics</a>
+            <a class="nav-link" data-bs-toggle="pill" href="#tab-settings"><i class="bi bi-sliders"></i> Settings</a>
+            <a class="nav-link" data-bs-toggle="pill" href="#tab-activity" onclick="loadActivity()"><i class="bi bi-activity"></i> Activity</a>
+            <a class="nav-link" data-bs-toggle="pill" href="#tab-embed"><i class="bi bi-code-slash"></i> Integration</a>
         </nav>
-
-        <div class="mt-auto pt-4 border-top">
-            <div class="d-flex align-items-center justify-content-between">
-                <div class="small fw-medium text-muted">Account</div>
-                <a href="/logout" class="text-danger small text-decoration-none"><i class="bi bi-box-arrow-right"></i> Logout</a>
+        <div class="sidebar-footer">
+            <div class="d-flex align-items-center justify-content-between px-2">
+                <span class="small" style="color:var(--muted)"><i class="bi bi-person-circle me-1"></i>Account</span>
+                <a href="/logout" class="small text-decoration-none" style="color:var(--red)"><i class="bi bi-box-arrow-right"></i></a>
             </div>
         </div>
     </aside>
 
-    <!-- Content -->
-    <main class="main-content">
-        <!-- Configuration Column -->
-        <div class="config-area">
-            <div class="tab-content">
-                <!-- Knowledge Tab -->
-                <div class="tab-pane fade show active" id="tab-knowledge">
-                    <h3 class="fw-bold mb-4">Knowledge Base</h3>
-                    
-                    <div class="card">
-                        <div class="card-header d-flex justify-content-between align-items-center">
-                            <span>Text Source</span>
-                            <button class="btn btn-sm btn-outline-danger" onclick="document.getElementById('kbText').value=''">Clear</button>
-                        </div>
-                        <div class="card-body">
-                            <textarea id="kbText" class="form-control mb-3" rows="12" placeholder="Paste your training data, FAQs, or policies here..."></textarea>
-                            <div class="d-flex justify-content-between align-items-center">
-                                <small class="text-muted"><i class="bi bi-info-circle"></i> Lucy answers based on this text.</small>
-                                <span class="badge bg-light text-dark border">Text</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="card">
-                        <div class="card-header">Website Import</div>
-                        <div class="card-body">
-                            <div class="input-group mb-3">
-                                <input type="text" id="scanUrl" class="form-control" placeholder="https://example.com">
-                                <button class="btn btn-primary" id="scanBtn" onclick="scanWebsite()">Scan Site</button>
-                            </div>
-                            
-                            <!-- Link Selection Area -->
-                            <div id="linkSelectionArea" class="d-none border rounded p-3 mb-3 bg-light">
-                                <label class="form-label fw-bold mb-2">Found Pages (Select to Import)</label>
-                                <div id="linksList" class="mb-3" style="max-height: 200px; overflow-y: auto;">
-                                    <!-- Checkboxes will go here -->
-                                </div>
-                                <button class="btn btn-success w-100" id="importLinksBtn" onclick="importSelectedLinks()">
-                                    <i class="bi bi-download me-2"></i>Import Selected Content
-                                </button>
-                            </div>
-                            
-                            <small class="text-muted"><i class="bi bi-link-45deg"></i> Crawl website and select pages to train Lucy on.</small>
-                        </div>
-                    </div>
-
-                    <div class="card">
-                        <div class="card-header">File Import</div>
-                        <div class="card-body">
-                            <div class="upload-box" onclick="document.getElementById('fileUpload').click()">
-                                <i class="bi bi-cloud-upload fs-3 text-primary mb-2"></i>
-                                <div class="fw-medium">Click to Upload PDF/TXT</div>
-                                <small class="text-muted">Max 5MB</small>
-                                <input type="file" id="fileUpload" class="d-none" onchange="uploadFile()">
-                            </div>
+<main class="main-content">
+    <div class="config-area">
+        <div class="tab-content">
+            <!-- Knowledge Tab -->
+            <div class="tab-pane fade show active" id="tab-knowledge">
+                <div class="section-title"><i class="bi bi-book"></i> Knowledge Base</div>
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center"><span>Text
+                            Source</span><button class="btn btn-sm btn-outline-danger"
+                            onclick="document.getElementById('kbText').value=''">Clear</button></div>
+                    <div class="card-body"><textarea id="kbText" class="form-control mb-3" rows="10"
+                            placeholder="Paste your training data, FAQs, or policies here..."></textarea><small
+                            style="color:var(--muted)"><i class="bi bi-info-circle"></i> Lucy answers based on this
+                            text.</small></div>
+                </div>
+                <div class="card">
+                    <div class="card-header">Website Import</div>
+                    <div class="card-body">
+                        <div class="input-group mb-3"><input type="text" id="scanUrl" class="form-control"
+                                placeholder="https://example.com"><button class="btn btn-primary" id="scanBtn"
+                                onclick="scanWebsite()">Scan</button></div>
+                        <div id="linkSelectionArea" class="d-none border rounded p-3 mb-3"
+                            style="border-color:var(--border)!important;background:var(--bg)"><label
+                                class="form-label mb-2">Found Pages</label>
+                            <div id="linksList" class="mb-3" style="max-height:200px;overflow-y:auto"></div><button
+                                class="btn btn-success w-100" id="importLinksBtn" onclick="importSelectedLinks()"><i
+                                    class="bi bi-download me-2"></i>Import Selected</button>
                         </div>
                     </div>
                 </div>
-
-                <!-- Settings Tab -->
-                <div class="tab-pane fade" id="tab-settings">
-                    <h3 class="fw-bold mb-4">Bot Settings</h3>
-                    
-                    <div class="card">
-                        <div class="card-header">Appearance & Branding</div>
-                        <div class="card-body">
-                            <div class="row g-3 mb-3">
-                                <div class="col-md-12">
-                                    <label class="form-label">Bot Name</label>
-                                    <input type="text" id="botName" class="form-control" placeholder="Lucy Support">
-                                </div>
-                            </div>
-                            <div class="row g-3">
-                                <div class="col-md-3">
-                                    <label class="form-label">Theme Color</label>
-                                    <input type="color" id="themeColor" class="form-control form-control-color w-100" value="#4F46E5">
-                                </div>
-                                <div class="col-md-3">
-                                    <label class="form-label">User Msg Color</label>
-                                    <input type="color" id="userMsgColor" class="form-control form-control-color w-100" value="#4F46E5">
-                                </div>
-                                <div class="col-md-3">
-                                    <label class="form-label">Bot Msg Color</label>
-                                    <input type="color" id="botMsgColor" class="form-control form-control-color w-100" value="#ffffff">
-                                </div>
-                                <div class="col-md-3">
-                                    <label class="form-label">Send Btn Color</label>
-                                    <input type="color" id="sendBtnColor" class="form-control form-control-color w-100" value="#4F46E5">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="card">
-                        <div class="card-header">AI Configuration</div>
-                        <div class="card-body">
-                            <div class="mb-3">
-                                <label class="form-label d-flex justify-content-between">
-                                    <span>Creativity (Temperature)</span>
-                                    <span id="tempValue" class="text-muted small">0.7</span>
-                                </label>
-                                <input type="range" class="form-range" id="aiTemp" min="0" max="1" step="0.1" value="0.7" oninput="document.getElementById('tempValue').innerText=this.value">
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Custom Instruction (System Prompt)</label>
-                                <textarea id="sysPrompt" class="form-control" rows="3" placeholder="Add custom behavior instructions..."></textarea>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Welcome Message</label>
-                                <input type="text" id="welcomeMsg" class="form-control">
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="card bg-light border-0">
-                        <div class="card-body">
-                            <label class="form-label text-muted small text-uppercase">API Key</label>
-                            <div class="input-group">
-                                <input type="text" id="apiKey" class="form-control font-monospace bg-white" readonly>
-                                <button class="btn btn-outline-secondary bg-white" onclick="generateNewKey()"><i class="bi bi-arrow-clockwise"></i></button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Activity Tab -->
-                <div class="tab-pane fade" id="tab-activity">
-                    <h3 class="fw-bold mb-4">Recent Activity</h3>
-                    <div class="card">
-                        <div class="card-body" id="activityList">
-                            <p class="text-muted text-center py-4">Loading activity...</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Embed Tab -->
-                <div class="tab-pane fade" id="tab-embed">
-                    <h3 class="fw-bold mb-4">Integration</h3>
-                    <div class="card">
-                        <div class="card-body">
-                            <p class="mb-3">Paste this snippet before the closing <code>&lt;/body&gt;</code> tag on your website.</p>
-                            <textarea id="embedCode" class="form-control font-monospace bg-dark text-white border-0 p-3" rows="8" readonly></textarea>
-                            <button class="btn btn-outline-primary w-100 mt-3" onclick="navigator.clipboard.writeText(document.getElementById('embedCode').value)">
-                                <i class="bi bi-clipboard me-2"></i>Copy Code
-                            </button>
+                <div class="card">
+                    <div class="card-header">File Import</div>
+                    <div class="card-body">
+                        <div class="upload-box" onclick="document.getElementById('fileUpload').click()"><i
+                                class="bi bi-cloud-upload fs-3 mb-2" style="color:var(--p2)"></i>
+                            <div class="fw-medium">Click to Upload PDF/TXT</div><small style="color:var(--muted)">Max
+                                5MB</small><input type="file" id="fileUpload" class="d-none" onchange="uploadFile()">
                         </div>
                     </div>
                 </div>
             </div>
-
-            <!-- Global Save Button -->
-            <button id="saveBtn" class="btn btn-primary w-100 py-3 fw-bold rounded-3 shadow-sm position-sticky bottom-0">
-                Save Changes
-            </button>
+            <!-- Clients Tab -->
+            <div class="tab-pane fade" id="tab-clients">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div class="section-title mb-0"><i class="bi bi-people"></i> Clients</div><button
+                        class="btn btn-primary btn-sm" onclick="openClientModal()"><i class="bi bi-plus-lg me-1"></i>Add
+                        Client</button>
+                </div>
+                <div class="card">
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Name</th>
+                                        <th>Service</th>
+                                        <th>Status</th>
+                                        <th>Phone</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="clientsTable">
+                                    <tr>
+                                        <td colspan="6" class="text-center py-4" style="color:var(--muted)">Loading...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Appointments Tab -->
+            <div class="tab-pane fade" id="tab-appointments">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div class="section-title mb-0"><i class="bi bi-calendar-check"></i> Appointments</div><button
+                        class="btn btn-primary btn-sm" onclick="openApptModal()"><i class="bi bi-plus-lg me-1"></i>New
+                        Appointment</button>
+                </div>
+                <div class="card">
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Client</th>
+                                        <th>Date/Time</th>
+                                        <th>Service</th>
+                                        <th>Status</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="apptsTable">
+                                    <tr>
+                                        <td colspan="6" class="text-center py-4" style="color:var(--muted)">Loading...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Conversations Tab -->
+            <div class="tab-pane fade" id="tab-conversations">
+                <div class="section-title"><i class="bi bi-chat-dots"></i> Conversations</div>
+                <div class="mb-3"><input type="text" id="convoSearch" class="form-control"
+                        placeholder="Search conversations..." oninput="searchConversations()"></div>
+                <div class="card">
+                    <div class="card-body p-0" id="convoList">
+                        <div class="text-center py-4" style="color:var(--muted)">Loading...</div>
+                    </div>
+                </div>
+            </div>
+            <!-- Analytics Tab -->
+            <div class="tab-pane fade" id="tab-analytics">
+                <div class="section-title"><i class="bi bi-graph-up"></i> Analytics</div>
+                <div class="row g-3 mb-4" id="statsCards"></div>
+                <div class="card">
+                    <div class="card-header">Conversations Per Day</div>
+                    <div class="card-body">
+                        <div id="chartArea"
+                            style="min-height:200px;display:flex;align-items:flex-end;gap:8px;padding:10px 0"></div>
+                    </div>
+                </div>
+            </div>
+            <!-- Settings Tab -->
+            <div class="tab-pane fade" id="tab-settings">
+                <div class="section-title"><i class="bi bi-sliders"></i> Settings</div>
+                <div class="card">
+                    <div class="card-header">Appearance</div>
+                    <div class="card-body">
+                        <div class="mb-3"><label class="form-label">Bot Name</label><input type="text" id="botName"
+                                class="form-control" placeholder="Lucy Support"></div>
+                        <div class="row g-3">
+                            <div class="col-3"><label class="form-label">Theme</label><input type="color"
+                                    id="themeColor" class="form-control form-control-color w-100" value="#6C5CE7"></div>
+                            <div class="col-3"><label class="form-label">User Msg</label><input type="color"
+                                    id="userMsgColor" class="form-control form-control-color w-100" value="#6C5CE7">
+                            </div>
+                            <div class="col-3"><label class="form-label">Bot Msg</label><input type="color"
+                                    id="botMsgColor" class="form-control form-control-color w-100" value="#ffffff">
+                            </div>
+                            <div class="col-3"><label class="form-label">Send Btn</label><input type="color"
+                                    id="sendBtnColor" class="form-control form-control-color w-100" value="#6C5CE7">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">AI Configuration</div>
+                    <div class="card-body">
+                        <div class="mb-3"><label
+                                class="form-label d-flex justify-content-between"><span>Creativity</span><span
+                                    id="tempValue" style="color:var(--muted)">0.7</span></label><input type="range"
+                                class="form-range" id="aiTemp" min="0" max="1" step="0.1" value="0.7"
+                                oninput="document.getElementById('tempValue').innerText=this.value"></div>
+                        <div class="mb-3"><label class="form-label">System Prompt</label><textarea id="sysPrompt"
+                                class="form-control" rows="3" placeholder="Custom behavior instructions..."></textarea>
+                        </div>
+                        <div class="mb-3"><label class="form-label">Welcome Message</label><input type="text"
+                                id="welcomeMsg" class="form-control"></div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-body"><label class="form-label">API Key</label>
+                        <div class="input-group"><input type="text" id="apiKey" class="form-control font-monospace"
+                                readonly style="background:var(--bg)"><button class="btn btn-outline-secondary"
+                                onclick="generateNewKey()"><i class="bi bi-arrow-clockwise"></i></button></div>
+                    </div>
+                </div>
+            </div>
+            <!-- Activity Tab -->
+            <div class="tab-pane fade" id="tab-activity">
+                <div class="section-title"><i class="bi bi-activity"></i> Activity</div>
+                <div class="card">
+                    <div class="card-body" id="activityList">
+                        <p style="color:var(--muted)" class="text-center py-4">Loading...</p>
+                    </div>
+                </div>
+            </div>
+            <!-- Embed Tab -->
+            <div class="tab-pane fade" id="tab-embed">
+                <div class="section-title"><i class="bi bi-code-slash"></i> Integration</div>
+                <div class="card">
+                    <div class="card-body">
+                        <p class="mb-3" style="color:var(--muted)">Paste this before <code>&lt;/body&gt;</code></p>
+                        <textarea id="embedCode" class="form-control font-monospace border-0 p-3" rows="6" readonly
+                            style="background:#0a0a15;color:var(--green)"></textarea><button
+                            class="btn btn-outline-primary w-100 mt-3"
+                            onclick="navigator.clipboard.writeText(document.getElementById('embedCode').value);showToast('Copied!')"><i
+                                class="bi bi-clipboard me-2"></i>Copy Code</button>
+                    </div>
+                </div>
+            </div>
         </div>
-
-        <!-- Phone Preview -->
-        <div class="preview-area d-none d-xl-flex">
-            <div class="phone-frame">
-                <div class="phone-notch"></div>
-                <div class="chat-app">
-                    <div class="chat-header">
-                        <div class="d-flex align-items-center gap-2">
-                            <div class="rounded-circle bg-light d-flex align-items-center justify-content-center" style="width:32px; height:32px; color:var(--primary-color)">
-                                <i class="bi bi-robot"></i>
-                            </div>
-                            <div class="fw-bold fs-6" id="previewName">Lucy AI</div>
+        <button id="saveBtn" class="btn btn-primary w-100 py-3 fw-bold rounded-3 shadow-sm position-sticky"
+            style="bottom:20px">Save Changes</button>
+    </div>
+    <!-- Phone Preview -->
+    <div class="preview-area d-none d-xl-flex">
+        <div class="phone-frame">
+            <div class="phone-notch"></div>
+            <div class="chat-app">
+                <div class="chat-header">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center"
+                            style="width:30px;height:30px;background:#e0e7ff;color:#6C5CE7"><i class="bi bi-robot"></i>
                         </div>
-                        <div class="d-flex gap-2 align-items-center">
-                            <i class="bi bi-trash text-muted cursor-pointer" id="clearPreviewBtn" title="Clear Chat" style="cursor:pointer"></i>
-                            <i class="bi bi-three-dots text-muted"></i>
-                        </div>
+                        <div class="fw-bold" id="previewName" style="font-size:.9rem;color:#1e293b">Lucy AI</div>
                     </div>
-                    <div id="messages" class="chat-messages">
-                        <!-- Preview messages -->
-                    </div>
-                    <div class="chat-input">
-                        <button id="micBtn" class="mic-btn">
-                            <i class="bi bi-mic-fill"></i>
-                        </button>
-                        <input type="text" id="userInput" class="form-control rounded-pill border-0 bg-light" placeholder="Message...">
-                        <button id="sendBtn" class="btn btn-primary rounded-circle" style="width:38px; height:38px; padding:0"><i class="bi bi-send-fill"></i></button>
-                    </div>
+                    <div><i class="bi bi-trash" id="clearPreviewBtn"
+                            style="cursor:pointer;color:#94a3b8;font-size:.9rem"></i></div>
                 </div>
-            </div>
-            <div class="text-center mt-4 text-muted small">
-                <i class="bi bi-eye"></i> Live Mobile Preview
+                <div id="messages" class="chat-messages"></div>
+                <div class="chat-input"><button id="micBtn" class="mic-btn"><i class="bi bi-mic-fill"
+                            style="font-size:.8rem"></i></button><input type="text" id="userInput"
+                        placeholder="Message..."><button id="sendBtn" class="btn btn-primary rounded-circle"
+                        style="width:34px;height:34px;padding:0;font-size:.8rem"><i
+                            class="bi bi-send-fill"></i></button></div>
             </div>
         </div>
-    </main>
+        <div class="text-center mt-3" style="color:var(--muted);font-size:.8rem"><i class="bi bi-eye"></i> Live Preview
+        </div>
+    </div>
+</main>
 </div>
-
-<!-- Toast -->
-<div class="toast-container">
-    <div id="saveToast" class="toast align-items-center text-white bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
-        <div class="d-flex">
-            <div class="toast-body">
-                <i class="bi bi-check-circle-fill me-2"></i> Settings saved successfully!
+<!-- Client Modal -->
+<div class="modal fade" id="clientModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="clientModalTitle">Add Client</h5><button type="button" class="btn-close"
+                    data-bs-dismiss="modal"></button>
             </div>
-            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            <div class="modal-body">
+                <input type="hidden" id="editClientId">
+                <div class="mb-3"><label class="form-label">Name</label><input type="text" id="cName"
+                        class="form-control"></div>
+                <div class="mb-3"><label class="form-label">Email</label><input type="email" id="cEmail"
+                        class="form-control"></div>
+                <div class="mb-3"><label class="form-label">Phone</label><input type="text" id="cPhone"
+                        class="form-control"></div>
+                <div class="mb-3"><label class="form-label">Service</label><input type="text" id="cService"
+                        class="form-control"></div>
+                <div class="mb-3"><label class="form-label">Status</label><select id="cStatus" class="form-select">
+                        <option value="active">Active</option>
+                        <option value="pending">Pending</option>
+                        <option value="inactive">Inactive</option>
+                    </select></div>
+                <div class="mb-3"><label class="form-label">Notes</label><textarea id="cNotes" class="form-control"
+                        rows="2"></textarea></div>
+            </div>
+            <div class="modal-footer"><button class="btn btn-outline-secondary"
+                    data-bs-dismiss="modal">Cancel</button><button class="btn btn-primary"
+                    onclick="saveClient()">Save</button></div>
         </div>
     </div>
 </div>
-
+<!-- Appointment Modal -->
+<div class="modal fade" id="apptModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="apptModalTitle">New Appointment</h5><button type="button" class="btn-close"
+                    data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editApptId">
+                <div class="mb-3"><label class="form-label">Client Name</label><input type="text" id="aName"
+                        class="form-control"></div>
+                <div class="mb-3"><label class="form-label">Client ID</label><input type="text" id="aClientId"
+                        class="form-control" placeholder="CLT001"></div>
+                <div class="mb-3"><label class="form-label">Date & Time</label><input type="text" id="aDateTime"
+                        class="form-control" placeholder="2026-02-20 02:30 PM"></div>
+                <div class="mb-3"><label class="form-label">Service Type</label><input type="text" id="aService"
+                        class="form-control"></div>
+                <div class="mb-3"><label class="form-label">Status</label><select id="aStatus" class="form-select">
+                        <option value="scheduled">Scheduled</option>
+                        <option value="completed">Completed</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select></div>
+                <div class="mb-3"><label class="form-label">Notes</label><textarea id="aNotes" class="form-control"
+                        rows="2"></textarea></div>
+            </div>
+            <div class="modal-footer"><button class="btn btn-outline-secondary"
+                    data-bs-dismiss="modal">Cancel</button><button class="btn btn-primary"
+                    onclick="saveAppointment()">Save</button></div>
+        </div>
+    </div>
+</div>
+<!-- Toast -->
+<div class="toast-container">
+    <div id="saveToast" class="toast align-items-center text-white bg-success border-0" role="alert">
+        <div class="d-flex">
+            <div class="toast-body" id="toastMsg"><i class="bi bi-check-circle-fill me-2"></i>Saved!</div><button
+                type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    </div>
+</div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-    const API_SETTINGS = "/api/settings";
-    const API_SUPPORT = "/api/support";
-    const API_UPLOAD = "/api/upload";
-    const API_ACTIVITY = "/api/activity";
-    const API_SCAN = "/api/scan-site";
-    const API_SCRAPE = "/api/scrape-pages";
-    
-    let currentConfig = {};
-
-    // --- Website Logic ---
-    async function scanWebsite() {
-        const urlInput = document.getElementById('scanUrl');
-        const url = urlInput.value.trim();
-        if (!url) return;
-        
-        const btn = document.getElementById('scanBtn');
-        const oldText = btn.innerText;
-        btn.innerText = "Scanning...";
-        btn.disabled = true;
-        
-        try {
-            const res = await fetch(API_SCAN, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ url: url })
-            });
-            const data = await res.json();
-            if (data.error) throw new Error(data.error);
-            
-            // Show selection UI
-            const list = document.getElementById('linksList');
-            list.innerHTML = data.links.map((link, i) => `
-                <div class="form-check text-truncate">
-                    <input class="form-check-input" type="checkbox" value="${link}" id="lnk${i}" checked>
-                    <label class="form-check-label" for="lnk${i}" title="${link}">
-                        ${link}
-                    </label>
-                </div>
-            `).join('');
-            
-            document.getElementById('linkSelectionArea').classList.remove('d-none');
-            showToast(`Found ${data.links.length} pages!`);
-            
-        } catch (e) {
-            alert("Scan failed: " + e.message);
-        } finally {
-            btn.innerText = oldText;
-            btn.disabled = false;
-        }
-    }
-
-    async function importSelectedLinks() {
-        const checkboxes = document.querySelectorAll('#linksList input:checked');
-        if (checkboxes.length === 0) {
-            alert("Please select at least one page.");
-            return;
-        }
-        
-        const urls = Array.from(checkboxes).map(cb => cb.value);
-        const btn = document.getElementById('importLinksBtn');
-        const oldText = btn.innerHTML;
-        btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>Importing ${urls.length} pages...`;
-        btn.disabled = true;
-        
-        try {
-            const res = await fetch(API_SCRAPE, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ urls: urls })
-            });
-            const data = await res.json();
-            if (data.error) throw new Error(data.error);
-            
-            const kb = document.getElementById('kbText');
-            kb.value = (kb.value + "\n" + data.text).trim();
-            
-            document.getElementById('linkSelectionArea').classList.add('d-none');
-            document.getElementById('scanUrl').value = "";
-            showToast(`Successfully imported ${data.count} pages!`);
-            
-        } catch (e) {
-            alert("Import failed: " + e.message);
-        } finally {
-            btn.innerHTML = oldText;
-            btn.disabled = false;
-        }
-    }
-
-    async function uploadFile() {
-        const input = document.getElementById('fileUpload');
-        const file = input.files[0];
-        if (!file) return;
-        
-        const formData = new FormData();
-        formData.append('file', file);
-        
-        try {
-            const res = await fetch(API_UPLOAD, { method: 'POST', body: formData });
-            const data = await res.json();
-            if (data.error) throw new Error(data.error);
-            
-            const kb = document.getElementById('kbText');
-            kb.value = (kb.value + "\n\n" + `--- ${data.filename} ---\n` + data.extracted_text).trim();
-            showToast("File imported successfully!");
-            input.value = "";
-        } catch (e) {
-            alert("Upload failed: " + e.message);
-        }
-    }
-
-    function updateEmbedCode(key) {
-        const code = `<script src="${window.location.origin}/static/widget.js"><\/script>\n<script>\n  window.__LUCY_CLIENT_KEY__ = "${key}";\n<\/script>`;
-        document.getElementById('embedCode').value = code;
-    }
-
-    function generateNewKey() {
-        const newKey = 'lucy-' + Math.random().toString(36).substr(2, 9);
-        document.getElementById('apiKey').value = newKey;
-        updateEmbedCode(newKey);
-    }
-
-    function showToast(msg) {
-        const toastEl = document.getElementById('saveToast');
-        const toast = new bootstrap.Toast(toastEl);
-        toast.show();
-    }
-
-    // --- Load & Save ---
-    async function loadSettings() {
-        try {
-            const res = await fetch(API_SETTINGS);
-            if(!res.ok) throw new Error("Auth required");
-            const data = await res.json();
-            
-            // Populate inputs
-            document.getElementById('kbText').value = data.knowledge_base || "";
-            document.getElementById('sysPrompt').value = data.system_prompt || "";
-            document.getElementById('welcomeMsg').value = data.welcome_message || "";
-            document.getElementById('apiKey').value = data.client_api_key || "lucy-dev-12345";
-            document.getElementById('botName').value = data.bot_name || "Lucy AI";
-            document.getElementById('themeColor').value = data.theme_color || "#4F46E5";
-            document.getElementById('userMsgColor').value = data.user_msg_color || "#4F46E5";
-            document.getElementById('botMsgColor').value = data.bot_msg_color || "#ffffff";
-            document.getElementById('sendBtnColor').value = data.send_btn_color || "#4F46E5";
-            document.getElementById('aiTemp').value = data.temperature || 0.7;
-            document.getElementById('tempValue').innerText = data.temperature || 0.7;
-            
-            updatePreview(data);
-            updateEmbedCode(data.client_api_key || "lucy-dev-12345");
-            
-            // Init chat
-            addMsg(data.welcome_message || "Hello!", 'assistant');
-        } catch(e) {
-            window.location.href = '/auth';
-        }
-    }
-
-    async function loadActivity() {
-        try {
-            const res = await fetch(API_ACTIVITY);
-            const logs = await res.json();
-            const container = document.getElementById('activityList');
-            
-            if (logs.length === 0) {
-                container.innerHTML = '<p class="text-muted text-center py-4">No recent activity.</p>';
-                return;
-            }
-            
-            container.innerHTML = logs.map(log => `
-                <div class="log-item">
-                    <div class="log-query">${log.payload?.query || "Unknown Query"}</div>
-                    <div class="log-meta">
-                        <span class="badge bg-light text-dark border me-2">${new Date(log.timestamp * 1000).toLocaleTimeString()}</span>
-                        <span class="text-success">${log.payload?.usage?.total_tokens || 0} tokens</span>
-                    </div>
-                </div>
-            `).join('');
-        } catch (e) {
-            console.error("Activity load error", e);
-        }
-    }
-
-    document.getElementById('saveBtn').addEventListener('click', async () => {
-        const btn = document.getElementById('saveBtn');
-        const oldText = btn.innerText;
-        btn.innerText = "Saving...";
-        btn.disabled = true;
-        
-        const config = {
-            knowledge_base: document.getElementById('kbText').value,
-            system_prompt: document.getElementById('sysPrompt').value,
-            welcome_message: document.getElementById('welcomeMsg').value,
-            client_api_key: document.getElementById('apiKey').value,
-            bot_name: document.getElementById('botName').value,
-            theme_color: document.getElementById('themeColor').value,
-            user_msg_color: document.getElementById('userMsgColor').value,
-            bot_msg_color: document.getElementById('botMsgColor').value,
-            send_btn_color: document.getElementById('sendBtnColor').value,
-            temperature: document.getElementById('aiTemp').value
-        };
-
-        await fetch(API_SETTINGS, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(config)
-        });
-
-        btn.innerText = oldText;
-        btn.disabled = false;
-        showToast("Configuration saved!");
-        updatePreview(config);
-    });
-
-    // --- Preview Logic ---
-    function updatePreview(config) {
-        document.documentElement.style.setProperty('--primary-color', config.theme_color);
-        document.getElementById('previewName').innerText = config.bot_name;
-        
-        // Update live preview message styles
-        const styleId = 'live-preview-styles';
-        let style = document.getElementById(styleId);
-        if (!style) {
-            style = document.createElement('style');
-            style.id = styleId;
-            document.head.appendChild(style);
-        }
-        style.innerHTML = `
-            .msg.user { background: ${config.user_msg_color || config.theme_color} !important; }
-            .msg.assistant { background: ${config.bot_msg_color || '#ffffff'} !important; }
-            #sendBtn { background: ${config.send_btn_color || config.theme_color} !important; }
-        `;
-    }
-
-    function addMsg(text, role) {
-        const div = document.createElement('div');
-        div.className = `msg ${role}`;
-        div.textContent = text;
-        const container = document.getElementById('messages');
-        container.appendChild(div);
-        container.scrollTop = container.scrollHeight;
-    }
-
-            async function sendMessage(enableTTS = false) {
-                const input = document.getElementById('userInput');
-                const text = input.value.trim();
-                if(!text) return;
-        
-                addMsg(text, 'user');
-                input.value = '';
-        
-                try {
-                    const res = await fetch(API_SUPPORT, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-API-KEY': 'dashboard-demo-key'
-                        },
-                        body: JSON.stringify({ user_query: text, language: 'auto', sector: 'admin' })     
-                    });
-                    const data = await res.json();
-                    addMsg(data.reply, 'assistant');
-                    if(enableTTS) speakText(data.reply);
-                } catch(e) {
-                    addMsg("Connection error", 'assistant');
-                }
-            }
-        
-            document.getElementById('sendBtn').addEventListener('click', () => sendMessage());
-            document.getElementById('userInput').addEventListener('keydown', (e) => {
-                if(e.key === 'Enter') sendMessage();
-            });
-        
-                // --- Voice Logic (HF MMS) ---
-                const micBtn = document.getElementById('micBtn');
-                const clearPreviewBtn = document.getElementById('clearPreviewBtn');
-                let mediaRecorder;
-                let audioChunks = [];
-            
-                clearPreviewBtn.addEventListener('click', () => {
-                    if (confirm("Clear preview chat?")) {
-                        document.getElementById('messages').innerHTML = '';
-                        addMsg(document.getElementById('welcomeMsg').value || "Hello!", 'assistant');
-                    }
-                });
-            
-                micBtn.addEventListener('click', async () => {                if (micBtn.classList.contains('listening')) {
-                    mediaRecorder.stop();
-                    micBtn.classList.remove('listening');
-                } else {
-                    try {
-                        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                        mediaRecorder = new MediaRecorder(stream);
-                        audioChunks = [];
-        
-                        mediaRecorder.ondataavailable = (event) => { audioChunks.push(event.data); };
-                        mediaRecorder.onstop = async () => {
-                            const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
-                            micBtn.classList.add('processing');
-                            try {
-                                const res = await fetch('/api/asr?lang=amh', { method: 'POST', body: audioBlob });
-                                const data = await res.json();
-                                if (data.text) {
-                                    document.getElementById('userInput').value = data.text;
-                                    sendMessage(true);
-                                }
-                            } catch (e) { console.error(e); }
-                            micBtn.classList.remove('processing');
-                        };
-                        mediaRecorder.start();
-                        micBtn.classList.add('listening');
-                    } catch (e) { console.error(e); }
-                }
-            });
-        
-            async function speakText(text) {
-                try {
-                    const res = await fetch('/api/tts', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ text: text, lang: 'am' })
-                    });
-                    const blob = await res.blob();
-                    const url = URL.createObjectURL(blob);
-                    const audio = new Audio(url);
-                    audio.play();
-                } catch (e) { console.error(e); }
-            }
-        
-            // Live color preview
-            document.getElementById('themeColor').addEventListener('input', (e) => {
-                document.documentElement.style.setProperty('--primary-color', e.target.value);
-            });    document.getElementById('userMsgColor').addEventListener('input', (e) => {
-        updatePreviewCurrent();
-    });
-    document.getElementById('botMsgColor').addEventListener('input', (e) => {
-        updatePreviewCurrent();
-    });
-    document.getElementById('sendBtnColor').addEventListener('input', (e) => {
-        updatePreviewCurrent();
-    });
-    document.getElementById('botName').addEventListener('input', (e) => {
-        document.getElementById('previewName').innerText = e.target.value || "Lucy AI";
-    });
-
-    function updatePreviewCurrent() {
-        updatePreview({
-            theme_color: document.getElementById('themeColor').value,
-            bot_name: document.getElementById('botName').value,
-            user_msg_color: document.getElementById('userMsgColor').value,
-            bot_msg_color: document.getElementById('botMsgColor').value,
-            send_btn_color: document.getElementById('sendBtnColor').value
-        });
-    }
-
-    loadSettings();
-</script>
+<script src="/static/dashboard.js"></script>
 </body>
+
 </html>

@@ -1,0 +1,62 @@
+{
+  "A101": {
+    "client_id": "CLT001",
+    "name": "Abebe Balcha",
+    "medications": [
+      "Metformin",
+      "Lisinopril"
+    ],
+    "appointment": "2026-02-15 10:00 AM",
+    "service_type": "General Checkup",
+    "status": "scheduled",
+    "notes": "General checkup for diabetes.",
+    "created_at": "2026-01-20"
+  },
+  "B202": {
+    "client_id": "CLT002",
+    "name": "Chala Guteta",
+    "medications": [
+      "Amoxicillin"
+    ],
+    "appointment": "2026-02-20 02:30 PM",
+    "service_type": "Follow-up",
+    "status": "scheduled",
+    "notes": "Follow-up for respiratory infection.",
+    "created_at": "2026-01-25"
+  },
+  "C303": {
+    "client_id": "CLT003",
+    "name": "Muna Ahmed",
+    "medications": [
+      "Paracetamol",
+      "Iron Supplements"
+    ],
+    "appointment": "2026-02-14 09:15 AM",
+    "service_type": "Prenatal Visit",
+    "status": "scheduled",
+    "notes": "Prenatal visit.",
+    "created_at": "2026-02-01"
+  },
+  "D404": {
+    "client_id": "CLT004",
+    "name": "Sara Solomon",
+    "medications": [
+      "Atorvastatin"
+    ],
+    "appointment": "2026-03-01 11:00 AM",
+    "service_type": "Cardiology Checkup",
+    "status": "scheduled",
+    "notes": "Cholesterol level check.",
+    "created_at": "2026-02-05"
+  },
+  "E505": {
+    "client_id": "CLT005",
+    "name": "Dawit Tadesse",
+    "medications": [],
+    "appointment": "2026-02-18 03:00 PM",
+    "service_type": "Banking Consultation",
+    "status": "completed",
+    "notes": "Account review and premium services discussion.",
+    "created_at": "2026-02-10"
+  }
+}
