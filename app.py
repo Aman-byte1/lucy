@@ -572,35 +572,55 @@ def scrape_pages():
     
     combined_text = ""
     sess = requests.Session()
+    # sess.verify = False # Using verify=True is safer, but if user targets self-signed sites, keep False
     sess.verify = False
-    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+    
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.5"
+    }
 
     success_count = 0
+    errors = []
     
     for url in urls:
+        if not url.startswith(('http://', 'https://')):
+            url = 'https://' + url
+            
         try:
-            resp = sess.get(url, headers=headers, timeout=10)
+            print(f"Scraping: {url}")
+            resp = sess.get(url, headers=headers, timeout=15)
+            resp.raise_for_status()
+            
             soup = BeautifulSoup(resp.text, 'html.parser')
             
-            for el in soup(["script", "style", "nav", "footer", "header", "noscript"]):
+            for el in soup(["script", "style", "nav", "footer", "header", "noscript", "iframe", "svg"]):
                 el.extract()
             
             content = soup.find('main') or soup.find('article') or soup.find('div', class_='content') or soup.body
-            text = content.get_text(separator='\n') if content else ""
+            if not content: raise Exception("No content found")
+            
+            text = content.get_text(separator='\n')
             
             clean_lines = [line.strip() for line in text.splitlines() if line.strip()]
             if clean_lines:
                 combined_text += f"\n\n--- Source: {url} ---\n"
                 combined_text += "\n".join(clean_lines)
                 success_count += 1
+            else:
+                raise Exception("Empty content after cleaning")
                 
-        except Exception:
+        except Exception as e:
+            print(f"Error scraping {url}: {str(e)}")
+            errors.append(f"{url}: {str(e)}")
             continue
             
     if success_count == 0:
-        return jsonify({"error": "Failed to scrape any pages"}), 500
+        return jsonify({"error": "Failed to scrape any pages", "details": errors}), 500
         
-    return jsonify({"text": combined_text, "count": success_count})
+    return jsonify({"text": combined_text, "count": success_count, "errors": errors})
 
 @app.route("/api/fetch-url", methods=["POST"])
 @login_required
